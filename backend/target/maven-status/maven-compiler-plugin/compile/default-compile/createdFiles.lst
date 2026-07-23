@@ -1,0 +1,15 @@
+com\uniservice\auth\controller\AuthController.class
+com\uniservice\core\common\BaseEntity.class
+com\uniservice\auth\entity\RefreshToken.class
+com\uniservice\auth\config\SecurityConfig.class
+com\uniservice\auth\dto\LoginRequest.class
+com\uniservice\auth\repository\PermissionRepository.class
+com\uniservice\auth\entity\Permission.class
+com\uniservice\auth\dto\LoginResponse.class
+com\uniservice\auth\repository\UserRepository.class
+com\uniservice\auth\entity\Role.class
+com\uniservice\auth\repository\RoleRepository.class
+com\uniservice\UniServiceApplication.class
+com\uniservice\auth\service\AuthService.class
+com\uniservice\auth\config\JwtProperties.class
+com\uniservice\auth\entity\User.class

@@ -1,0 +1,5 @@
+security:
+  jwt:
+    secret: CHANGE_THIS_TO_A_LONG_RANDOM_SECRET
+    access-token-minutes: 15
+    refresh-token-days: 7

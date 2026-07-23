@@ -1,0 +1,15 @@
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\config\JwtProperties.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\config\SecurityConfig.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\controller\AuthController.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\dto\LoginRequest.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\dto\LoginResponse.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\entity\Permission.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\entity\RefreshToken.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\entity\Role.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\entity\User.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\repository\PermissionRepository.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\repository\RoleRepository.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\repository\UserRepository.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\auth\service\AuthService.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\core\common\BaseEntity.java
+C:\laragon\www\ChatGPT\UniService\backend\src\main\java\com\uniservice\UniServiceApplication.java
