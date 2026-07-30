@@ -1,7 +1,0 @@
-CREATE TABLE login_history(
- id BIGSERIAL PRIMARY KEY,
- username VARCHAR(100),
- login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
- ip_address VARCHAR(64),
- successful BOOLEAN
-);
