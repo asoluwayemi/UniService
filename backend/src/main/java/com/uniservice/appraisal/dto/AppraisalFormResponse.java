@@ -1,0 +1,115 @@
+package com.uniservice.appraisal.dto;
+
+import com.uniservice.appraisal.entity.*;
+
+import java.time.Instant;
+import java.util.List;
+
+public record AppraisalFormResponse(
+        Long id,
+        Long cycleId,
+        Integer cycleYear,
+        Long staffProfileId,
+        String staffFullName,
+        String staffNumber,
+        AppraisalStatus status,
+
+        String scheduleOfDuties,
+
+        Integer ratingQualityOfWork,
+        Integer ratingKnowledgeOfWork,
+        Integer ratingPerformanceUnderStress,
+        Integer ratingInitiative,
+        Integer ratingAdaptability,
+        Integer ratingResourcefulness,
+        Integer ratingTeamSpirit,
+        Integer ratingJobPresence,
+        Integer ratingAdministrativeAbility,
+        Integer ratingAttitudeToWork,
+        Integer ratingKnowledgeOfIct,
+        Integer ratingPunctuality,
+        Integer ratingAppearance,
+        String loyaltyToInstitution,
+        OverallGrading overallGrading,
+        String coursesAttended,
+        String trainingNeeds,
+        Promotability promotability,
+        String promotabilityComments,
+        String longTermPotentials,
+        String generalRemarks,
+        Integer servedUnderReportingOfficerYears,
+        Integer numberOfQueries,
+        String pendingDisciplinaryAction,
+        String concludedDisciplinaryAction,
+        Long unitHeadId,
+        String unitHeadName,
+        String unitHeadPost,
+        Instant unitHeadSignedAt,
+
+        String staffComments,
+        Instant staffCommentedAt,
+
+        String departmentHeadComments,
+        Long departmentHeadId,
+        String departmentHeadName,
+        Instant departmentHeadSignedAt,
+
+        List<AppraisalSickLeaveResponse> sickLeaves,
+
+        boolean viewerIsOwner,
+        boolean viewerIsUnitHead,
+        boolean viewerIsDepartmentHead
+) {
+    public static AppraisalFormResponse from(AppraisalForm f, List<AppraisalSickLeave> sickLeaves,
+                                              boolean viewerIsOwner, boolean viewerIsUnitHead, boolean viewerIsDepartmentHead) {
+        return new AppraisalFormResponse(
+                f.getId(),
+                f.getCycle().getId(),
+                f.getCycle().getYear(),
+                f.getStaffProfile().getId(),
+                f.getStaffProfile().getUser().getFirstName() + " " + f.getStaffProfile().getUser().getLastName(),
+                f.getStaffProfile().getStaffNumber(),
+                f.getStatus(),
+                f.getScheduleOfDuties(),
+                f.getRatingQualityOfWork(),
+                f.getRatingKnowledgeOfWork(),
+                f.getRatingPerformanceUnderStress(),
+                f.getRatingInitiative(),
+                f.getRatingAdaptability(),
+                f.getRatingResourcefulness(),
+                f.getRatingTeamSpirit(),
+                f.getRatingJobPresence(),
+                f.getRatingAdministrativeAbility(),
+                f.getRatingAttitudeToWork(),
+                f.getRatingKnowledgeOfIct(),
+                f.getRatingPunctuality(),
+                f.getRatingAppearance(),
+                f.getLoyaltyToInstitution(),
+                f.getOverallGrading(),
+                f.getCoursesAttended(),
+                f.getTrainingNeeds(),
+                f.getPromotability(),
+                f.getPromotabilityComments(),
+                f.getLongTermPotentials(),
+                f.getGeneralRemarks(),
+                f.getServedUnderReportingOfficerYears(),
+                f.getNumberOfQueries(),
+                f.getPendingDisciplinaryAction(),
+                f.getConcludedDisciplinaryAction(),
+                f.getUnitHead() != null ? f.getUnitHead().getId() : null,
+                f.getUnitHead() != null ? f.getUnitHead().getFirstName() + " " + f.getUnitHead().getLastName() : null,
+                f.getUnitHeadPost(),
+                f.getUnitHeadSignedAt(),
+                f.getStaffComments(),
+                f.getStaffCommentedAt(),
+                f.getDepartmentHeadComments(),
+                f.getDepartmentHead() != null ? f.getDepartmentHead().getId() : null,
+                f.getDepartmentHead() != null ? f.getDepartmentHead().getFirstName() + " " + f.getDepartmentHead().getLastName() : null,
+                f.getDepartmentHeadSignedAt(),
+                sickLeaves.stream().map(AppraisalSickLeaveResponse::from).toList(),
+                viewerIsOwner,
+                viewerIsUnitHead,
+                viewerIsDepartmentHead
+        );
+    }
+}
