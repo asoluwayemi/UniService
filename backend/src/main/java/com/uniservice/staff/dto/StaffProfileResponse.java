@@ -1,0 +1,84 @@
+package com.uniservice.staff.dto;
+
+import com.uniservice.staff.entity.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+public record StaffProfileResponse(
+        Long id,
+        Long userId,
+        String username,
+        String firstName,
+        String lastName,
+        String email,
+        String staffNumber,
+        LocalDate dateOfBirth,
+        Gender gender,
+        String phone,
+        String address,
+        String nationality,
+        StaffCategory category,
+        String designation,
+        Long orgUnitId,
+        String orgUnitName,
+        EmploymentType employmentType,
+        EmploymentStatus employmentStatus,
+        LocalDate dateOfHire,
+        LocalDate contractStartDate,
+        LocalDate contractEndDate,
+        String bankName,
+        String bankAccountName,
+        String bankAccountNumber,
+        LocalDate dateOfFirstAppointment,
+        LocalDate dateAppointedToPresentPost,
+        String scheduleOfDuties,
+        String presentScaleAndSalary,
+        LocalDate dateOfNextIncrement,
+        LocalDate lastPromotionDate,
+        int completedAppraisalsSincePromotion,
+        boolean eligibleForPromotion,
+        List<AcademicQualificationResponse> qualifications,
+        List<EmploymentHistoryResponse> employmentHistory
+) {
+    public static StaffProfileResponse from(StaffProfile p, List<AcademicQualification> qualifications,
+                                             List<EmploymentHistory> employmentHistory,
+                                             int completedAppraisalsSincePromotion, boolean eligibleForPromotion) {
+        return new StaffProfileResponse(
+                p.getId(),
+                p.getUser().getId(),
+                p.getUser().getUsername(),
+                p.getUser().getFirstName(),
+                p.getUser().getLastName(),
+                p.getUser().getEmail(),
+                p.getStaffNumber(),
+                p.getDateOfBirth(),
+                p.getGender(),
+                p.getPhone(),
+                p.getAddress(),
+                p.getNationality(),
+                p.getCategory(),
+                p.getDesignation(),
+                p.getOrgUnit() != null ? p.getOrgUnit().getId() : null,
+                p.getOrgUnit() != null ? p.getOrgUnit().getName() : null,
+                p.getEmploymentType(),
+                p.getEmploymentStatus(),
+                p.getDateOfHire(),
+                p.getContractStartDate(),
+                p.getContractEndDate(),
+                p.getBankName(),
+                p.getBankAccountName(),
+                p.getBankAccountNumber(),
+                p.getDateOfFirstAppointment(),
+                p.getDateAppointedToPresentPost(),
+                p.getScheduleOfDuties(),
+                p.getPresentScaleAndSalary(),
+                p.getDateOfNextIncrement(),
+                p.getLastPromotionDate(),
+                completedAppraisalsSincePromotion,
+                eligibleForPromotion,
+                qualifications.stream().map(AcademicQualificationResponse::from).toList(),
+                employmentHistory.stream().map(EmploymentHistoryResponse::from).toList()
+        );
+    }
+}

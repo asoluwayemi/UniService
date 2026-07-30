@@ -14,6 +14,9 @@
 - shared
 - audit
 - configuration
+- org
+- notification
+- staff
 
 ## Coding Rules
 - Controllers return DTOs only.
