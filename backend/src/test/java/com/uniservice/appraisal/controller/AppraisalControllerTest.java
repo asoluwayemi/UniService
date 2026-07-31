@@ -19,7 +19,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -72,17 +71,17 @@ class AppraisalControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "hr", authorities = "APPRAISAL_READ")
     void forStaff_isOk_withAppraisalRead() throws Exception {
-        when(appraisalService.listForStaff(anyLong())).thenReturn(List.of());
+        when(appraisalService.listForStaff(anyLong(), any())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/appraisals/staff/1")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/appraisals/staff/1").with(authentication(authAs("hr", "APPRAISAL_READ"))))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(username = "jdoe", authorities = "STAFF_READ")
     void forStaff_isForbidden_withoutAppraisalRead() throws Exception {
-        mockMvc.perform(get("/api/appraisals/staff/1")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/appraisals/staff/1").with(authentication(authAs("jdoe", "STAFF_READ"))))
+                .andExpect(status().isForbidden());
     }
 
     @Test

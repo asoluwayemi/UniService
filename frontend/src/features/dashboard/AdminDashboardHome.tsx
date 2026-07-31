@@ -37,10 +37,17 @@ export function AdminDashboardHome() {
   const { user, hasPermission, hasRole } = useAuth();
   const navigate = useNavigate();
 
-  const canReadStaff = hasPermission('STAFF_READ');
-  const canReadOrg = hasPermission('ORG_READ');
+  const canReadStaff = hasPermission('STAFF_READ') || hasPermission('STAFF_READ_SUBTREE');
+  const canReadOrg = hasPermission('ORG_READ') || hasPermission('ORG_READ_SUBTREE');
   const canWriteOrg = hasPermission('ORG_WRITE');
   const isSystemAdmin = hasRole('SYSTEM_ADMIN');
+
+  // HR-portal-tier users (blanket STAFF_READ/ORG_READ/ORG_WRITE) must have completed the
+  // HR step-up before these links are shown or their counts fetched -- same gate as the
+  // sidebar nav, so nothing HR-only surfaces before the user is actually inside HR Portal.
+  const isHrPortalTier = hasPermission('HR_PORTAL_ACCESS');
+  const stepUpActive = !!user?.hrStepUpExpiresAt && new Date(user.hrStepUpExpiresAt) > new Date();
+  const hrGateOk = !isHrPortalTier || stepUpActive;
 
   const [staffCount, setStaffCount] = useState<number | null>(null);
   const [academicCount, setAcademicCount] = useState(0);
@@ -49,7 +56,7 @@ export function AdminDashboardHome() {
   const [userCount, setUserCount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!canReadStaff) return;
+    if (!canReadStaff || !hrGateOk) return;
     httpClient
       .get<StaffProfileSummary[]>('/api/staff')
       .then((res) => {
@@ -57,10 +64,10 @@ export function AdminDashboardHome() {
         setAcademicCount(res.data.filter((s) => s.category === 'ACADEMIC').length);
       })
       .catch(() => setStaffCount(0));
-  }, [canReadStaff]);
+  }, [canReadStaff, hrGateOk]);
 
   useEffect(() => {
-    if (!canReadOrg) return;
+    if (!canReadOrg || !hrGateOk) return;
     httpClient
       .get<OrgUnit[]>('/api/org/units')
       .then((res) => {
@@ -73,27 +80,29 @@ export function AdminDashboardHome() {
         });
       })
       .catch(() => setOrgUnitCounts({ college: 0, faculty: 0, department: 0, unit: 0 }));
-  }, [canReadOrg]);
+  }, [canReadOrg, hrGateOk]);
 
   useEffect(() => {
     if (!isSystemAdmin) return;
-    httpClient
-      .get<ChangeRequest[]>('/api/org/change-requests/pending')
-      .then((res) => setPendingApprovalsCount(res.data.length))
-      .catch(() => setPendingApprovalsCount(0));
+    if (hrGateOk) {
+      httpClient
+        .get<ChangeRequest[]>('/api/org/change-requests/pending')
+        .then((res) => setPendingApprovalsCount(res.data.length))
+        .catch(() => setPendingApprovalsCount(0));
+    }
     httpClient
       .get<UserSummary[]>('/api/auth/users')
       .then((res) => setUserCount(res.data.length))
       .catch(() => setUserCount(0));
-  }, [isSystemAdmin]);
+  }, [isSystemAdmin, hrGateOk]);
 
   if (!user) return null;
 
   const quickActions: QuickAction[] = [];
-  if (canReadStaff) quickActions.push({ label: 'Staff Directory', icon: <BadgeIcon />, to: '/staff' });
-  if (canReadOrg) quickActions.push({ label: 'Organization', icon: <AccountTreeIcon />, to: '/organization' });
-  if (canWriteOrg) quickActions.push({ label: 'My Requests', icon: <PlaylistAddCheckIcon />, to: '/organization/my-requests' });
-  if (isSystemAdmin) quickActions.push({ label: 'Approvals', icon: <FactCheckIcon />, to: '/organization/approvals' });
+  if (canReadStaff && hrGateOk) quickActions.push({ label: 'Staff Directory', icon: <BadgeIcon />, to: '/staff' });
+  if (canReadOrg && hrGateOk) quickActions.push({ label: 'Organization', icon: <AccountTreeIcon />, to: '/organization' });
+  if (canWriteOrg && hrGateOk) quickActions.push({ label: 'My Requests', icon: <PlaylistAddCheckIcon />, to: '/organization/my-requests' });
+  if (isSystemAdmin && hrGateOk) quickActions.push({ label: 'Approvals', icon: <FactCheckIcon />, to: '/organization/approvals' });
   if (isSystemAdmin) quickActions.push({ label: 'Manage Users', icon: <GroupIcon />, to: '/admin/users' });
 
   return (
@@ -106,7 +115,7 @@ export function AdminDashboardHome() {
       </Box>
 
       <Grid container spacing={3}>
-        {canReadStaff && (
+        {canReadStaff && hrGateOk && (
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <StatCard
               icon={<GroupsIcon />}
@@ -118,7 +127,7 @@ export function AdminDashboardHome() {
             />
           </Grid>
         )}
-        {isSystemAdmin && (
+        {isSystemAdmin && hrGateOk && (
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <StatCard
               icon={<FactCheckIcon />}
@@ -142,7 +151,7 @@ export function AdminDashboardHome() {
         )}
       </Grid>
 
-      {canReadOrg && (
+      {canReadOrg && hrGateOk && (
         <Box>
           <Typography variant="h6" sx={{ mb: 1.5 }}>
             Organization

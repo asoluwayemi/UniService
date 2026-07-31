@@ -14,7 +14,11 @@ import { AppraisalCyclesPage } from '../features/appraisal/AppraisalCyclesPage';
 import { MyAppraisalPage } from '../features/appraisal/MyAppraisalPage';
 import { PendingAppraisalActionsPage } from '../features/appraisal/PendingAppraisalActionsPage';
 import { AppraisalDetailPage } from '../features/appraisal/AppraisalDetailPage';
+import { TotpEnrollPage } from '../features/hr/TotpEnrollPage';
+import { HrStepUpPage } from '../features/hr/HrStepUpPage';
+import { HrPortalHome } from '../features/hr/HrPortalHome';
 import { ProtectedRoute } from '../components/ProtectedRoute';
+import { RequireHrStepUp } from '../components/RequireHrStepUp';
 
 export function AppRouter() {
   return (
@@ -36,7 +40,9 @@ export function AppRouter() {
           path="/staff"
           element={
             <ProtectedRoute requiredPermission="STAFF_READ">
-              <StaffDirectoryPage />
+              <RequireHrStepUp>
+                <StaffDirectoryPage />
+              </RequireHrStepUp>
             </ProtectedRoute>
           }
         />
@@ -44,7 +50,9 @@ export function AppRouter() {
           path="/staff/:id"
           element={
             <ProtectedRoute requiredPermission="STAFF_READ">
-              <StaffProfileDetailPage />
+              <RequireHrStepUp>
+                <StaffProfileDetailPage />
+              </RequireHrStepUp>
             </ProtectedRoute>
           }
         />
@@ -60,7 +68,9 @@ export function AppRouter() {
           path="/organization"
           element={
             <ProtectedRoute requiredPermission="ORG_READ">
-              <OrgUnitsPage />
+              <RequireHrStepUp>
+                <OrgUnitsPage />
+              </RequireHrStepUp>
             </ProtectedRoute>
           }
         />
@@ -68,7 +78,9 @@ export function AppRouter() {
           path="/organization/my-requests"
           element={
             <ProtectedRoute requiredPermission="ORG_WRITE">
-              <MyRequestsPage />
+              <RequireHrStepUp>
+                <MyRequestsPage />
+              </RequireHrStepUp>
             </ProtectedRoute>
           }
         />
@@ -76,7 +88,9 @@ export function AppRouter() {
           path="/organization/approvals"
           element={
             <ProtectedRoute requiredRole="SYSTEM_ADMIN">
-              <ApprovalsPage />
+              <RequireHrStepUp>
+                <ApprovalsPage />
+              </RequireHrStepUp>
             </ProtectedRoute>
           }
         />
@@ -88,6 +102,32 @@ export function AppRouter() {
           element={
             <ProtectedRoute requiredPermission="APPRAISAL_MANAGE">
               <AppraisalCyclesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr"
+          element={
+            <ProtectedRoute requiredPermission="HR_PORTAL_ACCESS">
+              <RequireHrStepUp>
+                <HrPortalHome />
+              </RequireHrStepUp>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/totp/enroll"
+          element={
+            <ProtectedRoute requiredPermission="HR_PORTAL_ACCESS">
+              <TotpEnrollPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/step-up"
+          element={
+            <ProtectedRoute requiredPermission="HR_PORTAL_ACCESS">
+              <HrStepUpPage />
             </ProtectedRoute>
           }
         />

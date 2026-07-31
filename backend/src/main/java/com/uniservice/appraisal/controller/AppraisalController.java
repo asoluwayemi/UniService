@@ -29,9 +29,10 @@ public class AppraisalController {
     }
 
     @GetMapping("/staff/{staffProfileId}")
-    @PreAuthorize("hasAuthority('APPRAISAL_READ')")
-    public List<AppraisalSummaryResponse> forStaff(@PathVariable Long staffProfileId) {
-        return appraisalService.listForStaff(staffProfileId);
+    @PreAuthorize("hasAnyAuthority('APPRAISAL_READ','APPRAISAL_READ_SUBTREE')")
+    public List<AppraisalSummaryResponse> forStaff(@PathVariable Long staffProfileId,
+                                                     @AuthenticationPrincipal UserPrincipal principal) {
+        return appraisalService.listForStaff(staffProfileId, principal.getUser());
     }
 
     @GetMapping("/{id}")

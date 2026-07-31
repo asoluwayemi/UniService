@@ -8,6 +8,8 @@ import com.uniservice.auth.repository.UserRepository;
 import com.uniservice.org.entity.OrgUnit;
 import com.uniservice.org.entity.OrgUnitStatus;
 import com.uniservice.org.repository.OrgUnitRepository;
+import com.uniservice.org.service.OrgUnitService;
+import com.uniservice.org.service.RoleSyncService;
 import com.uniservice.staff.dto.*;
 import com.uniservice.staff.entity.AcademicQualification;
 import com.uniservice.staff.entity.EmploymentHistory;
@@ -16,12 +18,14 @@ import com.uniservice.staff.repository.AcademicQualificationRepository;
 import com.uniservice.staff.repository.EmploymentHistoryRepository;
 import com.uniservice.staff.repository.StaffProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -35,13 +39,25 @@ public class StaffProfileService {
     private final UserRepository userRepository;
     private final OrgUnitRepository orgUnitRepository;
     private final AppraisalService appraisalService;
+    private final OrgUnitService orgUnitService;
+    private final RoleSyncService roleSyncService;
 
-    public List<StaffProfileSummaryResponse> listAll() {
-        return staffProfileRepository.findAll().stream().map(StaffProfileSummaryResponse::from).toList();
+    public List<StaffProfileSummaryResponse> listAll(User caller) {
+        if (hasAuthority(caller, "STAFF_READ")) {
+            return staffProfileRepository.findAll().stream().map(StaffProfileSummaryResponse::from).toList();
+        }
+        Set<Long> allowedOrgUnitIds = orgUnitService.descendantOrgUnitIdsForHeadedUnits(caller);
+        return staffProfileRepository.findAll().stream()
+                .filter(p -> isOwnProfile(p, caller)
+                        || (p.getOrgUnit() != null && allowedOrgUnitIds.contains(p.getOrgUnit().getId())))
+                .map(StaffProfileSummaryResponse::from)
+                .toList();
     }
 
-    public StaffProfileResponse getById(Long id) {
-        return toResponse(findProfile(id));
+    public StaffProfileResponse getById(Long id, User caller) {
+        StaffProfile profile = findProfile(id);
+        assertCanView(profile, caller);
+        return toResponse(profile);
     }
 
     public StaffProfileResponse getMine(User currentUser) {
@@ -96,6 +112,7 @@ public class StaffProfileService {
                 .build();
 
         StaffProfile saved = staffProfileRepository.save(profile);
+        roleSyncService.syncHrStaffRole(saved);
         return toResponse(saved);
     }
 
@@ -127,6 +144,7 @@ public class StaffProfileService {
         profile.setLastPromotionDate(request.getLastPromotionDate());
 
         StaffProfile saved = staffProfileRepository.save(profile);
+        roleSyncService.syncHrStaffRole(saved);
         return toResponse(saved);
     }
 
@@ -186,6 +204,27 @@ public class StaffProfileService {
     private StaffProfile findProfile(Long id) {
         return staffProfileRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Staff profile not found"));
+    }
+
+    private boolean isOwnProfile(StaffProfile profile, User caller) {
+        return profile.getUser() != null && profile.getUser().getId().equals(caller.getId());
+    }
+
+    private boolean hasAuthority(User user, String permissionName) {
+        return user.getRoles().stream()
+                .flatMap(r -> r.getPermissions().stream())
+                .anyMatch(p -> p.getName().equals(permissionName));
+    }
+
+    private void assertCanView(StaffProfile profile, User caller) {
+        if (isOwnProfile(profile, caller) || hasAuthority(caller, "STAFF_READ")) {
+            return;
+        }
+        Set<Long> allowedOrgUnitIds = orgUnitService.descendantOrgUnitIdsForHeadedUnits(caller);
+        boolean inSubtree = profile.getOrgUnit() != null && allowedOrgUnitIds.contains(profile.getOrgUnit().getId());
+        if (!inSubtree) {
+            throw new AccessDeniedException("You do not have access to this staff profile");
+        }
     }
 
     private void assertStaffNumberAvailable(String staffNumber, Long excludingProfileId) {

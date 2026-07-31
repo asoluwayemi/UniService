@@ -17,6 +17,8 @@ export interface CurrentUser {
   lastName: string;
   roles: string[];
   permissions: string[];
+  totpEnabled: boolean;
+  hrStepUpExpiresAt: string | null;
 }
 
 export interface UserSummary {

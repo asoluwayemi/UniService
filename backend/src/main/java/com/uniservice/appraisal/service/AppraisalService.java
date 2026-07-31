@@ -9,6 +9,7 @@ import com.uniservice.auth.entity.User;
 import com.uniservice.notification.service.NotificationService;
 import com.uniservice.org.entity.OrgUnit;
 import com.uniservice.org.entity.OrgUnitType;
+import com.uniservice.org.service.OrgUnitService;
 import com.uniservice.staff.entity.StaffProfile;
 import com.uniservice.staff.repository.StaffProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
@@ -33,6 +35,7 @@ public class AppraisalService {
     private final AppraisalSickLeaveRepository sickLeaveRepository;
     private final StaffProfileRepository staffProfileRepository;
     private final NotificationService notificationService;
+    private final OrgUnitService orgUnitService;
 
     // --- Cycles ---
 
@@ -87,9 +90,10 @@ public class AppraisalService {
         return toResponse(form, user);
     }
 
-    public List<AppraisalSummaryResponse> listForStaff(Long staffProfileId) {
+    public List<AppraisalSummaryResponse> listForStaff(Long staffProfileId, User caller) {
         StaffProfile staffProfile = staffProfileRepository.findById(staffProfileId)
                 .orElseThrow(() -> new NoSuchElementException("Staff profile not found"));
+        assertCanViewStaffAppraisals(staffProfile, caller);
         return formRepository.findByStaffProfileOrderByCreatedAtDesc(staffProfile).stream()
                 .map(AppraisalSummaryResponse::from).toList();
     }
@@ -231,14 +235,42 @@ public class AppraisalService {
 
     // --- Org hierarchy resolution ---
 
+    /**
+     * The staff member's own immediate org unit's head — unless that head is the appraisee
+     * themself, in which case nobody should review their own appraisal, so this escalates
+     * up the ancestor chain to the next available non-appraisee head instead.
+     */
     private User resolveUnitHead(AppraisalForm form) {
         OrgUnit unit = form.getStaffProfile().getOrgUnit();
-        return unit != null ? unit.getHead() : null;
+        if (unit == null) {
+            return null;
+        }
+        User appraisee = form.getStaffProfile().getUser();
+        User immediateHead = unit.getHead();
+        if (immediateHead != null && !immediateHead.getId().equals(appraisee.getId())) {
+            return immediateHead;
+        }
+        return resolveNextNonAppraiseeHead(unit.getParent(), appraisee);
     }
 
+    /**
+     * The nearest ancestor org unit of type DEPARTMENT's head (if the staff's own unit is
+     * itself a department, this collapses onto the same person resolveUnitHead already
+     * found — no special-casing needed) — again escalating past the appraisee themself if
+     * that department's head is who's being appraised (e.g. the Head of HR is appraised by
+     * the Head of College at this stage too, since HR's own head is the appraisee).
+     */
     private User resolveDepartmentHead(AppraisalForm form) {
         OrgUnit department = resolveDepartmentUnit(form.getStaffProfile().getOrgUnit());
-        return department != null ? department.getHead() : null;
+        if (department == null) {
+            return null;
+        }
+        User appraisee = form.getStaffProfile().getUser();
+        User deptHead = department.getHead();
+        if (deptHead != null && !deptHead.getId().equals(appraisee.getId())) {
+            return deptHead;
+        }
+        return resolveNextNonAppraiseeHead(department.getParent(), appraisee);
     }
 
     private OrgUnit resolveDepartmentUnit(OrgUnit unit) {
@@ -246,6 +278,18 @@ public class AppraisalService {
         while (current != null) {
             if (current.getType() == OrgUnitType.DEPARTMENT) {
                 return current;
+            }
+            current = current.getParent();
+        }
+        return null;
+    }
+
+    private User resolveNextNonAppraiseeHead(OrgUnit start, User appraisee) {
+        OrgUnit current = start;
+        while (current != null) {
+            User head = current.getHead();
+            if (head != null && !head.getId().equals(appraisee.getId())) {
+                return head;
             }
             current = current.getParent();
         }
@@ -278,12 +322,36 @@ public class AppraisalService {
         boolean isOwner = form.getStaffProfile().getUser().getId().equals(user.getId());
         boolean isUnitHead = sameUser(resolveUnitHead(form), user);
         boolean isDepartmentHead = sameUser(resolveDepartmentHead(form), user);
-        boolean hasBlanketAccess = user.getRoles().stream()
-                .flatMap(r -> r.getPermissions().stream())
-                .anyMatch(p -> p.getName().equals("APPRAISAL_READ"));
-        if (!isOwner && !isUnitHead && !isDepartmentHead && !hasBlanketAccess) {
+        boolean hasBlanketAccess = hasAuthority(user, "APPRAISAL_READ");
+        boolean hasSubtreeAccess = hasAuthority(user, "APPRAISAL_READ_SUBTREE")
+                && isWithinCallerSubtree(form.getStaffProfile(), user);
+        if (!isOwner && !isUnitHead && !isDepartmentHead && !hasBlanketAccess && !hasSubtreeAccess) {
             throw new AccessDeniedException("You do not have access to this appraisal");
         }
+    }
+
+    private void assertCanViewStaffAppraisals(StaffProfile staffProfile, User caller) {
+        boolean isSelf = staffProfile.getUser().getId().equals(caller.getId());
+        boolean hasBlanketAccess = hasAuthority(caller, "APPRAISAL_READ");
+        boolean hasSubtreeAccess = hasAuthority(caller, "APPRAISAL_READ_SUBTREE")
+                && isWithinCallerSubtree(staffProfile, caller);
+        if (!isSelf && !hasBlanketAccess && !hasSubtreeAccess) {
+            throw new AccessDeniedException("You do not have access to this staff member's appraisals");
+        }
+    }
+
+    private boolean isWithinCallerSubtree(StaffProfile staffProfile, User caller) {
+        if (staffProfile.getOrgUnit() == null) {
+            return false;
+        }
+        Set<Long> allowedOrgUnitIds = orgUnitService.descendantOrgUnitIdsForHeadedUnits(caller);
+        return allowedOrgUnitIds.contains(staffProfile.getOrgUnit().getId());
+    }
+
+    private boolean hasAuthority(User user, String permissionName) {
+        return user.getRoles().stream()
+                .flatMap(r -> r.getPermissions().stream())
+                .anyMatch(p -> p.getName().equals(permissionName));
     }
 
     private String staffDisplayName(AppraisalForm form) {

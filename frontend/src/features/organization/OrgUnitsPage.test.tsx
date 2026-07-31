@@ -33,6 +33,7 @@ describe('OrgUnitsPage', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: vi.fn(() => false),
+      refreshUser: vi.fn(),
     });
   });
 
@@ -61,6 +62,7 @@ describe('OrgUnitsPage', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: (permission: string) => permission === 'ORG_WRITE',
+      refreshUser: vi.fn(),
     });
     mockedGet.mockResolvedValueOnce({ data: flatUnits });
 

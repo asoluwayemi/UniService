@@ -23,6 +23,7 @@ describe('LoginPage', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: vi.fn(),
+      refreshUser: vi.fn(),
     });
   });
 

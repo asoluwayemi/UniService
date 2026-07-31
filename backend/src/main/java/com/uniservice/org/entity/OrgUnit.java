@@ -36,4 +36,8 @@ public class OrgUnit extends BaseEntity {
     @Column(nullable = false, length = 20)
     @Builder.Default
     private OrgUnitStatus status = OrgUnitStatus.ACTIVE;
+
+    @Column(name = "is_hr_unit", nullable = false)
+    @Builder.Default
+    private boolean hrUnit = false;
 }

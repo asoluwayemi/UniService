@@ -27,6 +27,7 @@ function authValue(overrides: Partial<ReturnType<typeof useAuth>>) {
     logout: vi.fn(),
     hasRole: vi.fn(),
     hasPermission: vi.fn(() => false),
+    refreshUser: vi.fn(),
     ...overrides,
   };
 }
@@ -46,7 +47,7 @@ describe('DashboardHome', () => {
   it('renders the admin dashboard for a user with STAFF_READ', () => {
     mockedUseAuth.mockReturnValue(
       authValue({
-        user: { id: 1, username: 'admin', email: 'a@x.com', firstName: 'A', lastName: 'B', roles: ['HR_ADMIN'], permissions: ['STAFF_READ'] },
+        user: { id: 1, username: 'admin', email: 'a@x.com', firstName: 'A', lastName: 'B', roles: ['HR_ADMIN'], permissions: ['STAFF_READ'], totpEnabled: false, hrStepUpExpiresAt: null },
         hasPermission: (p: string) => p === 'STAFF_READ',
       }),
     );
@@ -59,7 +60,7 @@ describe('DashboardHome', () => {
   it('renders the academic dashboard for an ACADEMIC_STAFF user with no management permissions', () => {
     mockedUseAuth.mockReturnValue(
       authValue({
-        user: { id: 2, username: 'jdoe', email: 'j@x.com', firstName: 'Jane', lastName: 'Doe', roles: ['ACADEMIC_STAFF'], permissions: [] },
+        user: { id: 2, username: 'jdoe', email: 'j@x.com', firstName: 'Jane', lastName: 'Doe', roles: ['ACADEMIC_STAFF'], permissions: [], totpEnabled: false, hrStepUpExpiresAt: null },
       }),
     );
 
@@ -71,7 +72,7 @@ describe('DashboardHome', () => {
   it('renders the non-academic dashboard for a NON_ACADEMIC_STAFF user with no management permissions', () => {
     mockedUseAuth.mockReturnValue(
       authValue({
-        user: { id: 3, username: 'psupport', email: 'p@x.com', firstName: 'Pat', lastName: 'Support', roles: ['NON_ACADEMIC_STAFF'], permissions: [] },
+        user: { id: 3, username: 'psupport', email: 'p@x.com', firstName: 'Pat', lastName: 'Support', roles: ['NON_ACADEMIC_STAFF'], permissions: [], totpEnabled: false, hrStepUpExpiresAt: null },
       }),
     );
 

@@ -32,6 +32,8 @@ public class OrgChangeRequestService {
     private final OrgUnitChangeRequestRepository changeRequestRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final RoleSyncService roleSyncService;
+    private final OrgUnitService orgUnitService;
 
     @Transactional
     public OrgUnitChangeRequest submit(SubmitChangeRequestRequest request, User requester) {
@@ -136,6 +138,7 @@ public class OrgChangeRequestService {
                 .proposedType(type)
                 .proposedParent(parent)
                 .proposedHead(head)
+                .proposedIsHrUnit(Boolean.TRUE.equals(request.getProposedIsHrUnit()) ? Boolean.TRUE : null)
                 .build();
     }
 
@@ -156,8 +159,9 @@ public class OrgChangeRequestService {
         boolean hasName = StringUtils.hasText(request.getProposedName());
         boolean hasCode = StringUtils.hasText(request.getProposedCode());
         boolean hasHead = request.getProposedHeadId() != null;
-        if (!hasName && !hasCode && !hasHead) {
-            throw new IllegalArgumentException("At least one field (name, code, or head) must change");
+        boolean hasIsHrUnit = request.getProposedIsHrUnit() != null;
+        if (!hasName && !hasCode && !hasHead && !hasIsHrUnit) {
+            throw new IllegalArgumentException("At least one field (name, code, head, or HR designation) must change");
         }
 
         if (hasCode) {
@@ -172,6 +176,7 @@ public class OrgChangeRequestService {
                 .proposedName(hasName ? request.getProposedName() : null)
                 .proposedCode(hasCode ? request.getProposedCode() : null)
                 .proposedHead(head)
+                .proposedIsHrUnit(hasIsHrUnit ? request.getProposedIsHrUnit() : null)
                 .build();
     }
 
@@ -299,6 +304,14 @@ public class OrgChangeRequestService {
                 .status(OrgUnitStatus.ACTIVE)
                 .build();
         orgUnitRepository.save(newUnit);
+
+        if (Boolean.TRUE.equals(request.getProposedIsHrUnit())) {
+            orgUnitService.reassignHrUnit(newUnit);
+            roleSyncService.resyncAllHeadshipRoles();
+            roleSyncService.resyncAllHrStaffRoles();
+        } else if (newUnit.getHead() != null) {
+            roleSyncService.reconcileHeadshipRoles(newUnit.getHead());
+        }
     }
 
     private void applyUpdate(OrgUnitChangeRequest request) {
@@ -313,10 +326,27 @@ public class OrgChangeRequestService {
         if (StringUtils.hasText(request.getProposedName())) {
             target.setName(request.getProposedName());
         }
-        if (request.getProposedHead() != null) {
+
+        User previousHead = target.getHead();
+        boolean headChanged = request.getProposedHead() != null;
+        if (headChanged) {
             target.setHead(request.getProposedHead());
         }
         orgUnitRepository.save(target);
+
+        if (headChanged) {
+            roleSyncService.onHeadChanged(previousHead, target.getHead(), target);
+        }
+
+        if (request.getProposedIsHrUnit() != null) {
+            if (request.getProposedIsHrUnit()) {
+                orgUnitService.reassignHrUnit(target);
+            } else {
+                orgUnitService.clearHrUnit(target);
+            }
+            roleSyncService.resyncAllHeadshipRoles();
+            roleSyncService.resyncAllHrStaffRoles();
+        }
     }
 
     private void applyArchive(OrgUnitChangeRequest request) {
@@ -325,8 +355,17 @@ public class OrgChangeRequestService {
             throw new IllegalArgumentException("This org unit is already archived");
         }
         assertNoActiveChildren(target);
+
+        boolean wasHrUnit = target.isHrUnit();
         target.setStatus(OrgUnitStatus.ARCHIVED);
         orgUnitRepository.save(target);
+
+        roleSyncService.onOrgUnitArchived(target);
+        if (wasHrUnit) {
+            orgUnitService.clearHrUnit(target);
+            roleSyncService.resyncAllHeadshipRoles();
+            roleSyncService.resyncAllHrStaffRoles();
+        }
     }
 
     private void supersedeOtherPendingRequests(OrgUnitChangeRequest approvedRequest, User reviewer) {

@@ -42,6 +42,9 @@ public class OrgUnitChangeRequest extends BaseEntity {
     @JoinColumn(name = "proposed_head_id")
     private User proposedHead;
 
+    @Column(name = "proposed_is_hr_unit")
+    private Boolean proposedIsHrUnit;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default

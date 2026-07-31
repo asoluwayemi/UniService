@@ -8,7 +8,13 @@ export function DashboardHome() {
 
   if (!user) return null;
 
-  const isManagement = hasPermission('STAFF_READ') || hasPermission('ORG_READ') || hasPermission('USER_MANAGE');
+  const isManagement =
+    hasPermission('STAFF_READ') ||
+    hasPermission('STAFF_READ_SUBTREE') ||
+    hasPermission('ORG_READ') ||
+    hasPermission('ORG_READ_SUBTREE') ||
+    hasPermission('USER_MANAGE') ||
+    hasPermission('HR_USER_MANAGE');
   if (isManagement) {
     return <AdminDashboardHome />;
   }

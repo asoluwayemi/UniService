@@ -26,6 +26,7 @@ import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import BadgeIcon from '@mui/icons-material/Badge';
 import PersonIcon from '@mui/icons-material/Person';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -83,17 +84,26 @@ export function DashboardLayout() {
     performanceItems.push({ label: 'Appraisal Cycles', to: '/appraisal-cycles', icon: <EventNoteIcon fontSize="small" /> });
   sections.push({ label: 'Performance', items: performanceItems });
 
-  const hrItems: NavItem[] = [];
-  if (hasPermission('STAFF_READ')) hrItems.push({ label: 'Staff Directory', to: '/staff', icon: <BadgeIcon fontSize="small" /> });
-  if (hasPermission('ORG_READ')) hrItems.push({ label: 'Organization', to: '/organization', icon: <AccountTreeIcon fontSize="small" /> });
-  if (hasPermission('ORG_WRITE'))
-    hrItems.push({ label: 'My Requests', to: '/organization/my-requests', icon: <PlaylistAddCheckIcon fontSize="small" /> });
-  if (hasRole('SYSTEM_ADMIN')) hrItems.push({ label: 'Approvals', to: '/organization/approvals', icon: <FactCheckIcon fontSize="small" /> });
-  if (hrItems.length > 0) sections.push({ label: 'HR & Organization', items: hrItems });
-
   const adminItems: NavItem[] = [];
   if (hasRole('SYSTEM_ADMIN')) adminItems.push({ label: 'Manage Users', to: '/admin/users', icon: <GroupIcon fontSize="small" /> });
   if (adminItems.length > 0) sections.push({ label: 'Administration', items: adminItems });
+
+  if (hasPermission('HR_PORTAL_ACCESS')) {
+    const hrPortalItems: NavItem[] = [{ label: 'HR Portal', to: '/hr', icon: <AdminPanelSettingsIcon fontSize="small" /> }];
+
+    // The sub-links only appear once step-up is actually complete -- before that, the only
+    // way in is the "HR Portal" link above, which walks the user through enrollment/step-up.
+    const stepUpActive = !!user?.hrStepUpExpiresAt && new Date(user.hrStepUpExpiresAt) > new Date();
+    if (stepUpActive) {
+      if (hasPermission('STAFF_READ')) hrPortalItems.push({ label: 'Staff Directory', to: '/staff', icon: <BadgeIcon fontSize="small" /> });
+      if (hasPermission('ORG_READ')) hrPortalItems.push({ label: 'Organization', to: '/organization', icon: <AccountTreeIcon fontSize="small" /> });
+      if (hasPermission('ORG_WRITE'))
+        hrPortalItems.push({ label: 'My Requests', to: '/organization/my-requests', icon: <PlaylistAddCheckIcon fontSize="small" /> });
+      if (hasRole('SYSTEM_ADMIN')) hrPortalItems.push({ label: 'Approvals', to: '/organization/approvals', icon: <FactCheckIcon fontSize="small" /> });
+    }
+
+    sections.push({ label: 'HR Portal', items: hrPortalItems });
+  }
 
   function isItemActive(to: string): boolean {
     if (location.pathname === to) return true;
