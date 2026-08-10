@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -27,6 +28,16 @@ public class UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Transactional(readOnly = true)
+    public List<UserSummaryResponse> listAllUsers() {
+        return userRepository.findAll().stream()
+                .map(u -> new UserSummaryResponse(u.getId(), u.getUsername(), u.getEmail(),
+                        u.getFirstName(), u.getLastName(), u.isEnabled(),
+                        u.getRoles().stream().map(Role::getName)
+                                .collect(Collectors.toCollection(TreeSet::new))))
+                .collect(Collectors.toList());
+    }
 
     @Transactional
     public UserSummaryResponse createUser(CreateUserRequest request, User actor) {
@@ -51,6 +62,22 @@ public class UserAdminService {
                 .build();
         User saved = userRepository.save(user);
 
+        return new UserSummaryResponse(saved.getId(), saved.getUsername(), saved.getEmail(),
+                saved.getFirstName(), saved.getLastName(), saved.isEnabled(),
+                saved.getRoles().stream().map(Role::getName).collect(Collectors.toCollection(TreeSet::new)));
+    }
+
+    @Transactional
+    public UserSummaryResponse setEnabled(Long userId, boolean enabled, User actor) {
+        User target = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        boolean actorIsSystemAdmin = actor.getRoles().stream()
+                .anyMatch(r -> r.getName().equals("SYSTEM_ADMIN"));
+        if (!actorIsSystemAdmin) {
+            throw new AccessDeniedException("Only SYSTEM_ADMIN can enable/disable accounts.");
+        }
+        target.setEnabled(enabled);
+        User saved = userRepository.save(target);
         return new UserSummaryResponse(saved.getId(), saved.getUsername(), saved.getEmail(),
                 saved.getFirstName(), saved.getLastName(), saved.isEnabled(),
                 saved.getRoles().stream().map(Role::getName).collect(Collectors.toCollection(TreeSet::new)));
