@@ -325,7 +325,7 @@ export function AdminDashboardHome() {
               ACTIVE ROLES
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2.5 }}>
-              {user.roles.map((role) => (
+              {(user.roles ?? []).map((role) => (
                 <Chip key={role} label={role} color="primary" sx={{ fontWeight: 700 }} size="small" />
               ))}
             </Stack>
@@ -333,12 +333,12 @@ export function AdminDashboardHome() {
               SYSTEM PERMISSIONS
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {user.permissions.length === 0 ? (
+              {(user.permissions ?? []).length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   No permissions assigned.
                 </Typography>
               ) : (
-                user.permissions.map((permission) => (
+                (user.permissions ?? []).map((permission) => (
                   <Chip key={permission} label={permission} color="secondary" variant="outlined" sx={{ fontWeight: 700 }} size="small" />
                 ))
               )}
