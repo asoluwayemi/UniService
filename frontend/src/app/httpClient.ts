@@ -2,8 +2,8 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { getAccessToken, setAccessToken } from './tokenStore';
 
 const defaultApiUrl =
-  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-    ? `${window.location.protocol}//${window.location.hostname}:8083`
+  typeof window !== 'undefined'
+    ? window.location.origin
     : 'http://localhost:8080';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? defaultApiUrl;
