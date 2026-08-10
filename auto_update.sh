@@ -14,14 +14,25 @@ git fetch origin master
 LOCAL_HASH=$(git rev-parse HEAD)
 REMOTE_HASH=$(git rev-parse origin/master)
 
-if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] New changes detected on origin/master! Deploying updates..." >> "$LOG_FILE"
+# Check if new commits exist or force deployment flag
+if [ "$LOCAL_HASH" != "$REMOTE_HASH" ] || [ "$1" == "--force" ] || [ ! -f "$APP_DIR/backend/target/backend-1.0.0.jar" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Deploying latest UniService release..." >> "$LOG_FILE"
     
     # Pull latest code
     git checkout master
     git pull origin master
     
-    # Rebuild backend & embedded frontend
+    # Build frontend
+    cd "$APP_DIR/frontend" || exit 1
+    npm install
+    npm run build
+    
+    # Copy frontend build into backend static resources
+    mkdir -p "$APP_DIR/backend/src/main/resources/static"
+    rm -rf "$APP_DIR/backend/src/main/resources/static/"*
+    cp -r "$APP_DIR/frontend/dist/"* "$APP_DIR/backend/src/main/resources/static/"
+    
+    # Rebuild backend
     cd "$APP_DIR/backend" || exit 1
     mvn clean package -DskipTests
     
