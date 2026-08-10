@@ -7,6 +7,8 @@ import com.uniservice.org.entity.OrgUnit;
 import com.uniservice.org.entity.OrgUnitStatus;
 import com.uniservice.org.entity.OrgUnitType;
 import com.uniservice.org.repository.OrgUnitRepository;
+import com.uniservice.org.service.OrgUnitService;
+import com.uniservice.org.service.RoleSyncService;
 import com.uniservice.staff.dto.*;
 import com.uniservice.staff.entity.*;
 import com.uniservice.staff.repository.AcademicQualificationRepository;
@@ -17,11 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +41,8 @@ class StaffProfileServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private OrgUnitRepository orgUnitRepository;
     @Mock private AppraisalService appraisalService;
+    @Mock private OrgUnitService orgUnitService;
+    @Mock private RoleSyncService roleSyncService;
 
     private StaffProfileService service;
 
@@ -45,7 +51,8 @@ class StaffProfileServiceTest {
     @BeforeEach
     void setUp() {
         service = new StaffProfileService(staffProfileRepository, qualificationRepository,
-                employmentHistoryRepository, userRepository, orgUnitRepository, appraisalService);
+                employmentHistoryRepository, userRepository, orgUnitRepository, appraisalService,
+                orgUnitService, roleSyncService);
 
         user = new User();
         user.setId(1L);
@@ -172,5 +179,79 @@ class StaffProfileServiceTest {
         StaffProfileResponse result = service.addQualification(1L, request);
 
         assertThat(result.id()).isEqualTo(1L);
+    }
+
+    @Test
+    void listAll_blanketStaffRead_returnsEveryProfile() {
+        User caller = new User();
+        caller.setId(9L);
+        caller.setUsername("hr");
+        com.uniservice.auth.entity.Permission staffRead =
+                com.uniservice.auth.entity.Permission.builder().name("STAFF_READ").build();
+        com.uniservice.auth.entity.Role hrAdmin = com.uniservice.auth.entity.Role.builder()
+                .name("HR_ADMIN").permissions(Set.of(staffRead)).build();
+        caller.setRoles(Set.of(hrAdmin));
+
+        StaffProfile other = StaffProfile.builder().user(user).staffNumber("STAFF-0002").build();
+        other.setId(2L);
+        when(staffProfileRepository.findAll()).thenReturn(List.of(other));
+
+        List<StaffProfileSummaryResponse> result = service.listAll(caller);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void listAll_subtreeScoped_filtersToOwnAndSubtreeProfiles() {
+        User caller = new User();
+        caller.setId(9L);
+        caller.setUsername("depthead");
+
+        OrgUnit inSubtree = OrgUnit.builder().name("CS").code("CS").type(OrgUnitType.DEPARTMENT)
+                .status(OrgUnitStatus.ACTIVE).build();
+        inSubtree.setId(5L);
+        OrgUnit outsideSubtree = OrgUnit.builder().name("Physics").code("PHY").type(OrgUnitType.DEPARTMENT)
+                .status(OrgUnitStatus.ACTIVE).build();
+        outsideSubtree.setId(6L);
+
+        StaffProfile inScope = StaffProfile.builder().user(user).staffNumber("STAFF-0003").orgUnit(inSubtree).build();
+        inScope.setId(3L);
+        StaffProfile outOfScope = StaffProfile.builder().user(user).staffNumber("STAFF-0004").orgUnit(outsideSubtree).build();
+        outOfScope.setId(4L);
+
+        when(staffProfileRepository.findAll()).thenReturn(List.of(inScope, outOfScope));
+        when(orgUnitService.descendantOrgUnitIdsForHeadedUnits(caller)).thenReturn(Set.of(5L));
+
+        List<StaffProfileSummaryResponse> result = service.listAll(caller);
+
+        assertThat(result).extracting(StaffProfileSummaryResponse::id).containsExactly(3L);
+    }
+
+    @Test
+    void getById_ownProfile_isAlwaysVisible() {
+        StaffProfile profile = StaffProfile.builder().user(user).staffNumber("STAFF-0001").build();
+        profile.setId(1L);
+        when(staffProfileRepository.findById(1L)).thenReturn(Optional.of(profile));
+        when(qualificationRepository.findByStaffProfile(profile)).thenReturn(List.of());
+        when(employmentHistoryRepository.findByStaffProfile(profile)).thenReturn(List.of());
+        when(appraisalService.countCompletedAppraisalsSincePromotion(profile)).thenReturn(0);
+
+        StaffProfileResponse result = service.getById(1L, user);
+
+        assertThat(result.id()).isEqualTo(1L);
+    }
+
+    @Test
+    void getById_unrelatedCallerOutsideSubtree_throws() {
+        StaffProfile profile = StaffProfile.builder().user(user).staffNumber("STAFF-0001").build();
+        profile.setId(1L);
+        when(staffProfileRepository.findById(1L)).thenReturn(Optional.of(profile));
+        when(orgUnitService.descendantOrgUnitIdsForHeadedUnits(any())).thenReturn(Set.of());
+
+        User stranger = new User();
+        stranger.setId(77L);
+        stranger.setUsername("stranger");
+
+        assertThatThrownBy(() -> service.getById(1L, stranger)).isInstanceOf(AccessDeniedException.class);
     }
 }

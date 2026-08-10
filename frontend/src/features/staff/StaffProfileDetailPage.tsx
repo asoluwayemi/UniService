@@ -20,12 +20,17 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import DescriptionIcon from '@mui/icons-material/Description';
+
 import { httpClient } from '../../app/httpClient';
 import { useAuth } from '../../app/AuthContext';
 import { StaffProfileCard } from './StaffProfileCard';
 import { EditStaffProfileDialog } from './EditStaffProfileDialog';
 import { AddQualificationDialog } from './AddQualificationDialog';
 import { AddEmploymentHistoryDialog } from './AddEmploymentHistoryDialog';
+import { AcademicProgressSection } from './AcademicProgressSection';
+import { NonAcademicProgressSection } from './NonAcademicProgressSection';
+import { GenerateCvModal } from './GenerateCvModal';
 import type { StaffProfile } from './types';
 import type { AppraisalSummary } from '../appraisal/types';
 
@@ -41,6 +46,7 @@ export function StaffProfileDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [addQualificationOpen, setAddQualificationOpen] = useState(false);
   const [addHistoryOpen, setAddHistoryOpen] = useState(false);
+  const [cvModalOpen, setCvModalOpen] = useState(false);
   const [appraisals, setAppraisals] = useState<AppraisalSummary[] | null>(null);
 
   const load = useCallback(() => {
@@ -84,23 +90,47 @@ export function StaffProfileDetailPage() {
     );
   }
 
+  const isAcademic = profile.category === 'ACADEMIC';
+
   return (
     <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4">Staff Profile</Typography>
-        {canWrite && (
-          <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>
-            Edit
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Staff Profile</Typography>
+        <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<DescriptionIcon />}
+            onClick={() => setCvModalOpen(true)}
+            sx={{ fontWeight: 700, borderRadius: '10px' }}
+          >
+            Generate CV
           </Button>
-        )}
+          {canWrite && (
+            <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>
+              Edit Profile
+            </Button>
+          )}
+        </Stack>
       </Stack>
 
       <StaffProfileCard profile={profile} />
 
+      {/* Progress & Activities Section (Academic vs Non-Academic) */}
+      {isAcademic ? (
+        <AcademicProgressSection staffProfileId={profile.id} isMine={false} />
+      ) : (
+        <NonAcademicProgressSection
+          staffProfileId={profile.id}
+          isMine={false}
+          scheduleOfDuties={profile.scheduleOfDuties}
+        />
+      )}
+
       <Card>
         <CardContent>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-            <Typography variant="h6">Academic Qualifications</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>Academic & Professional Qualifications</Typography>
             {canWrite && (
               <IconButton aria-label="Add qualification" onClick={() => setAddQualificationOpen(true)} size="small">
                 <AddIcon fontSize="small" />
@@ -138,7 +168,7 @@ export function StaffProfileDetailPage() {
       <Card>
         <CardContent>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-            <Typography variant="h6">Employment History</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>Employment & Cadre History</Typography>
             {canWrite && (
               <IconButton aria-label="Add employment history" onClick={() => setAddHistoryOpen(true)} size="small">
                 <AddIcon fontSize="small" />
@@ -176,7 +206,7 @@ export function StaffProfileDetailPage() {
       {canReadAppraisals && (
         <Card>
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
               Appraisal History
             </Typography>
             {appraisals === null ? (
@@ -230,6 +260,13 @@ export function StaffProfileDetailPage() {
             setAddHistoryOpen(false);
             load();
           }}
+        />
+      )}
+      {cvModalOpen && (
+        <GenerateCvModal
+          open
+          profile={profile}
+          onClose={() => setCvModalOpen(false)}
         />
       )}
     </Stack>

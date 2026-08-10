@@ -20,15 +20,15 @@ public class StaffProfileController {
     private final StaffProfileService staffProfileService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('STAFF_READ')")
-    public List<StaffProfileSummaryResponse> list() {
-        return staffProfileService.listAll();
+    @PreAuthorize("(hasAuthority('STAFF_READ') and @hrStepUp.verified(authentication)) or hasAuthority('STAFF_READ_SUBTREE')")
+    public List<StaffProfileSummaryResponse> list(@AuthenticationPrincipal UserPrincipal principal) {
+        return staffProfileService.listAll(principal.getUser());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('STAFF_READ')")
-    public StaffProfileResponse getById(@PathVariable Long id) {
-        return staffProfileService.getById(id);
+    @PreAuthorize("(hasAuthority('STAFF_READ') and @hrStepUp.verified(authentication)) or hasAuthority('STAFF_READ_SUBTREE')")
+    public StaffProfileResponse getById(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        return staffProfileService.getById(id, principal.getUser());
     }
 
     @GetMapping("/me")
@@ -37,43 +37,43 @@ public class StaffProfileController {
     }
 
     @GetMapping("/eligible-users")
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public List<UserSummaryResponse> eligibleUsers() {
         return staffProfileService.listEligibleUsers();
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public StaffProfileResponse create(@Valid @RequestBody CreateStaffProfileRequest request) {
         return staffProfileService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public StaffProfileResponse update(@PathVariable Long id, @Valid @RequestBody UpdateStaffProfileRequest request) {
         return staffProfileService.update(id, request);
     }
 
     @PostMapping("/{id}/qualifications")
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public StaffProfileResponse addQualification(@PathVariable Long id, @Valid @RequestBody AddQualificationRequest request) {
         return staffProfileService.addQualification(id, request);
     }
 
     @DeleteMapping("/{id}/qualifications/{qualificationId}")
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public StaffProfileResponse removeQualification(@PathVariable Long id, @PathVariable Long qualificationId) {
         return staffProfileService.removeQualification(id, qualificationId);
     }
 
     @PostMapping("/{id}/employment-history")
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public StaffProfileResponse addEmploymentHistory(@PathVariable Long id, @Valid @RequestBody AddEmploymentHistoryRequest request) {
         return staffProfileService.addEmploymentHistory(id, request);
     }
 
     @DeleteMapping("/{id}/employment-history/{historyId}")
-    @PreAuthorize("hasAuthority('STAFF_WRITE')")
+    @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public StaffProfileResponse removeEmploymentHistory(@PathVariable Long id, @PathVariable Long historyId) {
         return staffProfileService.removeEmploymentHistory(id, historyId);
     }

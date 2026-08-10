@@ -2,6 +2,8 @@ target/
 .idea/
 .vscode/
 node_modules/
+frontend/dist/
+scratch/
 .env
 *.log
 *.zip

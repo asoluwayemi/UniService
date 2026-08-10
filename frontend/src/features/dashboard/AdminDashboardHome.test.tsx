@@ -52,12 +52,13 @@ function renderPage() {
 
 function authValue(overrides: Partial<ReturnType<typeof useAuth>>) {
   return {
-    user: { id: 1, username: 'admin', email: 'admin@uniservice.local', firstName: 'System', lastName: 'Admin', roles: ['SYSTEM_ADMIN'], permissions: ['STAFF_READ', 'ORG_READ', 'ORG_WRITE', 'USER_MANAGE'] },
+    user: { id: 1, username: 'admin', email: 'admin@uniservice.local', firstName: 'System', lastName: 'Admin', roles: ['SYSTEM_ADMIN'], permissions: ['STAFF_READ', 'ORG_READ', 'ORG_WRITE', 'USER_MANAGE'], totpEnabled: false, hrStepUpExpiresAt: null },
     isLoading: false,
     login: vi.fn(),
     logout: vi.fn(),
     hasRole: vi.fn(() => false),
     hasPermission: vi.fn(() => false),
+    refreshUser: vi.fn(),
     ...overrides,
   };
 }
@@ -72,6 +73,11 @@ describe('AdminDashboardHome', () => {
     mockEndpoints();
     mockedUseAuth.mockReturnValue(
       authValue({
+        user: {
+          id: 1, username: 'admin', email: 'admin@uniservice.local', firstName: 'System', lastName: 'Admin',
+          roles: ['SYSTEM_ADMIN'], permissions: ['STAFF_READ', 'ORG_READ', 'ORG_WRITE', 'USER_MANAGE', 'HR_PORTAL_ACCESS'],
+          totpEnabled: true, hrStepUpExpiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+        },
         hasRole: (r: string) => r === 'SYSTEM_ADMIN',
         hasPermission: () => true,
       }),
@@ -113,6 +119,11 @@ describe('AdminDashboardHome', () => {
     });
     mockedUseAuth.mockReturnValue(
       authValue({
+        user: {
+          id: 1, username: 'admin', email: 'admin@uniservice.local', firstName: 'System', lastName: 'Admin',
+          roles: ['SYSTEM_ADMIN'], permissions: ['STAFF_READ', 'ORG_READ', 'ORG_WRITE', 'USER_MANAGE', 'HR_PORTAL_ACCESS'],
+          totpEnabled: true, hrStepUpExpiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+        },
         hasRole: (r: string) => r === 'SYSTEM_ADMIN',
         hasPermission: () => true,
       }),
@@ -137,7 +148,7 @@ describe('AdminDashboardHome', () => {
     mockEndpoints();
     mockedUseAuth.mockReturnValue(
       authValue({
-        user: { id: 4, username: 'finance', email: 'f@x.com', firstName: 'Finn', lastName: 'Ance', roles: ['FINANCE_OFFICER'], permissions: ['STAFF_READ'] },
+        user: { id: 4, username: 'finance', email: 'f@x.com', firstName: 'Finn', lastName: 'Ance', roles: ['FINANCE_OFFICER'], permissions: ['STAFF_READ'], totpEnabled: false, hrStepUpExpiresAt: null },
         hasRole: () => false,
         hasPermission: (p: string) => p === 'STAFF_READ',
       }),
@@ -150,5 +161,27 @@ describe('AdminDashboardHome', () => {
     expect(screen.queryByText('Colleges')).not.toBeInTheDocument();
     expect(screen.queryByText('Pending Approvals')).not.toBeInTheDocument();
     expect(screen.queryByText('System Users')).not.toBeInTheDocument();
+  });
+
+  it('hides HR-portal-tier cards and quick actions until HR step-up is complete', async () => {
+    mockEndpoints();
+    mockedUseAuth.mockReturnValue(
+      authValue({
+        user: {
+          id: 5, username: 'hrhead', email: 'hrhead@uniservice.local', firstName: 'HR', lastName: 'Head',
+          roles: ['HR_ADMIN'], permissions: ['STAFF_READ', 'ORG_READ', 'ORG_WRITE', 'HR_PORTAL_ACCESS'],
+          totpEnabled: true, hrStepUpExpiresAt: null,
+        },
+        hasRole: () => false,
+        hasPermission: (p: string) => ['STAFF_READ', 'ORG_READ', 'ORG_WRITE', 'HR_PORTAL_ACCESS'].includes(p),
+      }),
+    );
+
+    renderPage();
+
+    await screen.findByText('Welcome back, HR');
+    expect(screen.queryByText('Total Staff')).not.toBeInTheDocument();
+    expect(screen.queryByText('Organization')).not.toBeInTheDocument();
+    expect(screen.queryByText('Staff Directory')).not.toBeInTheDocument();
   });
 });

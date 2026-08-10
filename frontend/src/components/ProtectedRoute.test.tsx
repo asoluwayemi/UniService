@@ -37,6 +37,8 @@ const baseUser = {
   lastName: 'Doe',
   roles: ['ACADEMIC_STAFF'],
   permissions: [] as string[],
+  totpEnabled: false,
+  hrStepUpExpiresAt: null,
 };
 
 describe('ProtectedRoute', () => {
@@ -52,6 +54,7 @@ describe('ProtectedRoute', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: vi.fn(),
+      refreshUser: vi.fn(),
     });
 
     renderWithRoute('/protected');
@@ -67,6 +70,7 @@ describe('ProtectedRoute', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: vi.fn(),
+      refreshUser: vi.fn(),
     });
 
     renderWithRoute('/protected');
@@ -82,6 +86,7 @@ describe('ProtectedRoute', () => {
       logout: vi.fn(),
       hasRole: (role: string) => role === 'ACADEMIC_STAFF',
       hasPermission: vi.fn(),
+      refreshUser: vi.fn(),
     });
 
     renderWithRoute('/protected');
@@ -97,6 +102,7 @@ describe('ProtectedRoute', () => {
       logout: vi.fn(),
       hasRole: () => false,
       hasPermission: vi.fn(),
+      refreshUser: vi.fn(),
     });
 
     renderWithRoute('/protected', 'SYSTEM_ADMIN');
@@ -112,6 +118,7 @@ describe('ProtectedRoute', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: (permission: string) => permission === 'ORG_READ',
+      refreshUser: vi.fn(),
     });
 
     renderWithRoute('/protected', undefined, 'ORG_READ');
@@ -127,6 +134,7 @@ describe('ProtectedRoute', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: () => false,
+      refreshUser: vi.fn(),
     });
 
     renderWithRoute('/protected', undefined, 'ORG_WRITE');

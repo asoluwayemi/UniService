@@ -4,6 +4,7 @@ import com.uniservice.auth.config.JwtProperties;
 import com.uniservice.auth.entity.RefreshToken;
 import com.uniservice.auth.entity.User;
 import com.uniservice.auth.repository.RefreshTokenRepository;
+import com.uniservice.auth.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.*;
 class RefreshTokenServiceTest {
 
     @Mock private RefreshTokenRepository repository;
+    @Mock private UserRepository userRepository;
 
     private RefreshTokenService refreshTokenService;
 
@@ -31,7 +33,7 @@ class RefreshTokenServiceTest {
     void setUp() {
         JwtProperties properties = new JwtProperties();
         properties.setRefreshExpirationDays(7);
-        refreshTokenService = new RefreshTokenService(repository, properties);
+        refreshTokenService = new RefreshTokenService(repository, properties, userRepository);
     }
 
     @Test
@@ -103,6 +105,31 @@ class RefreshTokenServiceTest {
 
         assertThatThrownBy(() -> refreshTokenService.rotate("revoked-token"))
                 .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void revokeToken_clearsUsersHrStepUpElevation() {
+        User user = new User();
+        user.setHrStepUpExpiresAt(Instant.now().plusSeconds(600));
+        RefreshToken token = RefreshToken.builder().token("t1").user(user).revoked(false).build();
+        when(repository.findByToken("t1")).thenReturn(Optional.of(token));
+
+        refreshTokenService.revokeToken("t1");
+
+        assertThat(token.isRevoked()).isTrue();
+        assertThat(user.getHrStepUpExpiresAt()).isNull();
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void revokeToken_userWithNoStepUpElevation_doesNotTouchUserRepository() {
+        User user = new User();
+        RefreshToken token = RefreshToken.builder().token("t1").user(user).revoked(false).build();
+        when(repository.findByToken("t1")).thenReturn(Optional.of(token));
+
+        refreshTokenService.revokeToken("t1");
+
+        verify(userRepository, never()).save(any());
     }
 
     @Test

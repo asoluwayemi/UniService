@@ -6,6 +6,7 @@ import com.uniservice.auth.config.SecurityConfig;
 import com.uniservice.auth.security.UserPrincipal;
 import com.uniservice.auth.service.JwtService;
 import com.uniservice.auth.entity.User;
+import com.uniservice.hr.security.HrStepUpGuard;
 import com.uniservice.org.entity.ChangeRequestAction;
 import com.uniservice.org.entity.ChangeRequestStatus;
 import com.uniservice.org.entity.OrgUnitChangeRequest;
@@ -33,7 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(OrgChangeRequestController.class)
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class})
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class, HrStepUpGuard.class})
 class OrgChangeRequestControllerTest {
 
     @Autowired
@@ -57,6 +58,7 @@ class OrgChangeRequestControllerTest {
         User user = new User();
         user.setId(1L);
         user.setUsername(username);
+        user.setHrStepUpExpiresAt(java.time.Instant.now().plus(java.time.Duration.ofMinutes(15)));
         UserPrincipal principal = UserPrincipal.of(user);
         List<SimpleGrantedAuthority> grantedAuthorities = List.of(authorities).stream()
                 .map(SimpleGrantedAuthority::new)
@@ -101,11 +103,12 @@ class OrgChangeRequestControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = "SYSTEM_ADMIN")
     void pending_isOk_forSuperAdmin() throws Exception {
         when(changeRequestService.listPending()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/org/change-requests/pending")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/org/change-requests/pending")
+                        .with(authentication(authAs("admin", "ROLE_SYSTEM_ADMIN"))))
+                .andExpect(status().isOk());
     }
 
     @Test

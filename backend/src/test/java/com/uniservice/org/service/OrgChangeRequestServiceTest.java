@@ -28,6 +28,8 @@ class OrgChangeRequestServiceTest {
     @Mock private OrgUnitChangeRequestRepository changeRequestRepository;
     @Mock private UserRepository userRepository;
     @Mock private NotificationService notificationService;
+    @Mock private RoleSyncService roleSyncService;
+    @Mock private OrgUnitService orgUnitService;
 
     private OrgChangeRequestService service;
 
@@ -37,7 +39,8 @@ class OrgChangeRequestServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new OrgChangeRequestService(orgUnitRepository, changeRequestRepository, userRepository, notificationService);
+        service = new OrgChangeRequestService(orgUnitRepository, changeRequestRepository, userRepository,
+                notificationService, roleSyncService, orgUnitService);
 
         requester = new User();
         requester.setId(1L);
@@ -321,6 +324,88 @@ class OrgChangeRequestServiceTest {
                 .hasMessageContaining("Review notes are required");
 
         verifyNoInteractions(changeRequestRepository);
+    }
+
+    @Test
+    void approve_update_headChange_capturesOldHeadAndCallsRoleSync() {
+        User oldHead = new User();
+        oldHead.setId(6L);
+        oldHead.setUsername("old.head");
+        User newHead = new User();
+        newHead.setId(7L);
+        newHead.setUsername("new.head");
+
+        OrgUnit target = orgUnit(40L, "Engineering", "ENG", OrgUnitType.FACULTY, OrgUnitStatus.ACTIVE, null);
+        target.setHead(oldHead);
+
+        OrgUnitChangeRequest pending = OrgUnitChangeRequest.builder()
+                .action(ChangeRequestAction.UPDATE)
+                .targetOrgUnit(target)
+                .proposedHead(newHead)
+                .status(ChangeRequestStatus.PENDING)
+                .requestedBy(requester)
+                .build();
+        pending.setId(210L);
+
+        stubChangeRequestSaveEchoesArgument();
+        when(changeRequestRepository.findById(210L)).thenReturn(Optional.of(pending));
+        when(changeRequestRepository.findByTargetOrgUnitAndStatusAndIdNot(target, ChangeRequestStatus.PENDING, 210L))
+                .thenReturn(List.of());
+
+        service.approve(210L, reviewer, "ok");
+
+        assertThat(target.getHead()).isEqualTo(newHead);
+        verify(roleSyncService).onHeadChanged(oldHead, newHead, target);
+    }
+
+    @Test
+    void approve_create_withHead_callsRoleSyncReconcile() {
+        User head = new User();
+        head.setId(8L);
+        head.setUsername("new.dept.head");
+
+        OrgUnitChangeRequest pending = OrgUnitChangeRequest.builder()
+                .action(ChangeRequestAction.CREATE)
+                .proposedName("Engineering")
+                .proposedCode("ENG")
+                .proposedType(OrgUnitType.FACULTY)
+                .proposedHead(head)
+                .status(ChangeRequestStatus.PENDING)
+                .requestedBy(requester)
+                .build();
+        pending.setId(101L);
+
+        stubChangeRequestSaveEchoesArgument();
+        when(changeRequestRepository.findById(101L)).thenReturn(Optional.of(pending));
+        when(orgUnitRepository.findByCodeIgnoreCaseAndStatus("ENG", OrgUnitStatus.ACTIVE)).thenReturn(Optional.empty());
+
+        service.approve(101L, reviewer, null);
+
+        verify(roleSyncService).reconcileHeadshipRoles(head);
+    }
+
+    @Test
+    void approve_create_withIsHrUnit_designatesHrUnitAndResyncsAll() {
+        OrgUnitChangeRequest pending = OrgUnitChangeRequest.builder()
+                .action(ChangeRequestAction.CREATE)
+                .proposedName("HR")
+                .proposedCode("HR")
+                .proposedType(OrgUnitType.DEPARTMENT)
+                .proposedIsHrUnit(true)
+                .status(ChangeRequestStatus.PENDING)
+                .requestedBy(requester)
+                .build();
+        pending.setId(102L);
+
+        stubChangeRequestSaveEchoesArgument();
+        when(changeRequestRepository.findById(102L)).thenReturn(Optional.of(pending));
+        when(orgUnitRepository.findByCodeIgnoreCaseAndStatus("HR", OrgUnitStatus.ACTIVE)).thenReturn(Optional.empty());
+
+        service.approve(102L, reviewer, null);
+
+        verify(orgUnitService).reassignHrUnit(any(OrgUnit.class));
+        verify(roleSyncService).resyncAllHeadshipRoles();
+        verify(roleSyncService).resyncAllHrStaffRoles();
     }
 
     @Test

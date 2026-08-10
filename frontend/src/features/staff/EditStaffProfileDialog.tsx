@@ -37,6 +37,11 @@ export function EditStaffProfileDialog({ open, profile, onClose, onSaved }: Edit
   const [presentScaleAndSalary, setPresentScaleAndSalary] = useState(profile.presentScaleAndSalary ?? '');
   const [dateOfNextIncrement, setDateOfNextIncrement] = useState(profile.dateOfNextIncrement ?? '');
   const [lastPromotionDate, setLastPromotionDate] = useState(profile.lastPromotionDate ?? '');
+  const [promotionDueDate, setPromotionDueDate] = useState(profile.promotionDueDate ?? '');
+  const [gradeLevel, setGradeLevel] = useState(profile.gradeLevel?.toString() ?? '');
+  const [gradeStep, setGradeStep] = useState(profile.gradeStep?.toString() ?? '');
+  const [cadre, setCadre] = useState(profile.cadre ?? '');
+  const [ippisNumber, setIppisNumber] = useState(profile.ippisNumber ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,6 +63,11 @@ export function EditStaffProfileDialog({ open, profile, onClose, onSaved }: Edit
         presentScaleAndSalary: presentScaleAndSalary || undefined,
         dateOfNextIncrement: dateOfNextIncrement || undefined,
         lastPromotionDate: lastPromotionDate || undefined,
+        promotionDueDate: promotionDueDate || undefined,
+        gradeLevel: gradeLevel ? Number(gradeLevel) : undefined,
+        gradeStep: gradeStep ? Number(gradeStep) : undefined,
+        cadre: cadre || undefined,
+        ippisNumber: ippisNumber || undefined,
       });
       onSaved();
     } catch (err: unknown) {
@@ -170,6 +180,18 @@ export function EditStaffProfileDialog({ open, profile, onClose, onSaved }: Edit
             InputLabelProps={{ shrink: true }}
             fullWidth
           />
+          <TextField
+            label="Promotion Review Due"
+            type="date"
+            value={promotionDueDate}
+            onChange={(e) => setPromotionDueDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+          <TextField label="Grade Level" type="number" value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} fullWidth />
+          <TextField label="Grade Step" type="number" value={gradeStep} onChange={(e) => setGradeStep(e.target.value)} fullWidth />
+          <TextField label="Cadre" value={cadre} onChange={(e) => setCadre(e.target.value)} fullWidth />
+          <TextField label="IPPIS Number" value={ippisNumber} onChange={(e) => setIppisNumber(e.target.value)} fullWidth />
         </Stack>
       </DialogContent>
       <DialogActions>

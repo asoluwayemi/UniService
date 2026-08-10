@@ -95,4 +95,25 @@ public class StaffProfile extends BaseEntity {
 
     @Column(name = "last_promotion_date")
     private LocalDate lastPromotionDate;
+
+    @Column(name = "promotion_due_date")
+    private LocalDate promotionDueDate;
+
+    @Column(name = "grade_level")
+    private Integer gradeLevel;
+
+    @Column(name = "grade_step")
+    private Integer gradeStep;
+
+    @Column(length = 150)
+    private String cadre;
+
+    @Column(name = "ippis_number", length = 50)
+    private String ippisNumber;
+
+    @Column(length = 20)
+    private String nin;
+
+    @Column(length = 50)
+    private String tin;
 }

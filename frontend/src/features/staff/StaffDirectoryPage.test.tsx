@@ -53,6 +53,7 @@ describe('StaffDirectoryPage', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: vi.fn(() => false),
+      refreshUser: vi.fn(),
     });
   });
 
@@ -82,6 +83,7 @@ describe('StaffDirectoryPage', () => {
       logout: vi.fn(),
       hasRole: vi.fn(),
       hasPermission: (permission: string) => permission === 'STAFF_WRITE',
+      refreshUser: vi.fn(),
     });
     mockedGet.mockResolvedValueOnce({ data: staff });
 

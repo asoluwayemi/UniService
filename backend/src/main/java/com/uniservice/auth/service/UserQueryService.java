@@ -33,7 +33,8 @@ public class UserQueryService {
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return new MeResponse(user.getId(), user.getUsername(), user.getEmail(),
-                user.getFirstName(), user.getLastName(), roles, permissions);
+                user.getFirstName(), user.getLastName(), roles, permissions,
+                user.isTotpEnabled(), user.getHrStepUpExpiresAt());
     }
 
     public List<UserSummaryResponse> listUsers() {

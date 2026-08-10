@@ -6,6 +6,7 @@ import com.uniservice.auth.config.SecurityConfig;
 import com.uniservice.auth.entity.User;
 import com.uniservice.auth.security.UserPrincipal;
 import com.uniservice.auth.service.JwtService;
+import com.uniservice.hr.security.HrStepUpGuard;
 import com.uniservice.staff.dto.StaffProfileResponse;
 import com.uniservice.staff.entity.EmploymentStatus;
 import com.uniservice.staff.entity.EmploymentType;
@@ -33,7 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(StaffProfileController.class)
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class})
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class, HrStepUpGuard.class})
 class StaffProfileControllerTest {
 
     @Autowired
@@ -52,6 +53,18 @@ class StaffProfileControllerTest {
         User user = new User();
         user.setId(1L);
         user.setUsername(username);
+        user.setHrStepUpExpiresAt(java.time.Instant.now().plus(java.time.Duration.ofMinutes(15)));
+        UserPrincipal principal = UserPrincipal.of(user);
+        List<SimpleGrantedAuthority> grantedAuthorities = List.of(authorities).stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+        return new UsernamePasswordAuthenticationToken(principal, null, grantedAuthorities);
+    }
+
+    private UsernamePasswordAuthenticationToken authAsWithoutStepUp(String username, String... authorities) {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername(username);
         UserPrincipal principal = UserPrincipal.of(user);
         List<SimpleGrantedAuthority> grantedAuthorities = List.of(authorities).stream()
                 .map(SimpleGrantedAuthority::new)
@@ -64,12 +77,12 @@ class StaffProfileControllerTest {
                 "STAFF-0001", null, null, null, null, null, StaffCategory.ACADEMIC, "Lecturer",
                 null, null, EmploymentType.FULL_TIME, EmploymentStatus.ACTIVE,
                 LocalDate.of(2024, 1, 15), null, null, null, null, null,
-                null, null, null, null, null, null, 0, false, List.of(), List.of());
+                null, null, null, null, null, null, null, null, null, null, null, null, null, 0, false, List.of(), List.of());
     }
 
     @Test
     void list_isOk_forUserWithStaffRead() throws Exception {
-        when(staffProfileService.listAll()).thenReturn(List.of());
+        when(staffProfileService.listAll(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/staff").with(authentication(authAs("hr", "STAFF_READ"))))
                 .andExpect(status().isOk());
@@ -109,6 +122,15 @@ class StaffProfileControllerTest {
     @WithMockUser(username = "hr", authorities = "STAFF_READ")
     void create_isForbidden_withoutStaffWrite() throws Exception {
         mockMvc.perform(post("/api/staff")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":1,\"staffNumber\":\"STAFF-0001\",\"category\":\"ACADEMIC\",\"employmentType\":\"FULL_TIME\",\"dateOfHire\":\"2024-01-15\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void create_isForbidden_withStaffWriteButWithoutHrStepUp() throws Exception {
+        mockMvc.perform(post("/api/staff")
+                        .with(authentication(authAsWithoutStepUp("hr", "STAFF_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userId\":1,\"staffNumber\":\"STAFF-0001\",\"category\":\"ACADEMIC\",\"employmentType\":\"FULL_TIME\",\"dateOfHire\":\"2024-01-15\"}"))
                 .andExpect(status().isForbidden());

@@ -60,12 +60,13 @@ describe('StaffDashboard', () => {
   beforeEach(() => {
     mockedGet.mockReset();
     mockedUseAuth.mockReturnValue({
-      user: { id: 2, username: 'jdoe', email: 'jdoe@uniservice.local', firstName: 'Jane', lastName: 'Doe', roles: ['ACADEMIC_STAFF'], permissions: [] },
+      user: { id: 2, username: 'jdoe', email: 'jdoe@uniservice.local', firstName: 'Jane', lastName: 'Doe', roles: ['ACADEMIC_STAFF'], permissions: [], totpEnabled: false, hrStepUpExpiresAt: null },
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn(),
       hasRole: vi.fn(() => false),
       hasPermission: vi.fn(() => false),
+      refreshUser: vi.fn(),
     });
   });
 

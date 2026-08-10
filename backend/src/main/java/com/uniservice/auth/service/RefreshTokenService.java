@@ -3,6 +3,7 @@ package com.uniservice.auth.service;
 import com.uniservice.auth.config.JwtProperties;
 import com.uniservice.auth.entity.*;
 import com.uniservice.auth.repository.RefreshTokenRepository;
+import com.uniservice.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository repository;
     private final JwtProperties jwtProperties;
+    private final UserRepository userRepository;
 
     public RefreshToken create(User user){
         RefreshToken token=RefreshToken.builder()
@@ -34,10 +36,21 @@ public class RefreshTokenService {
         });
     }
 
+    /**
+     * Revokes the token and clears the user's HR step-up elevation, so logging back in
+     * (even within the step-up's TTL) requires the TOTP code again rather than silently
+     * inheriting the still-valid elevation.
+     */
     public void revokeToken(String rawToken){
         repository.findByToken(rawToken).ifPresent(t -> {
             t.setRevoked(true);
             repository.save(t);
+
+            User user = t.getUser();
+            if (user.getHrStepUpExpiresAt() != null) {
+                user.setHrStepUpExpiresAt(null);
+                userRepository.save(user);
+            }
         });
     }
 

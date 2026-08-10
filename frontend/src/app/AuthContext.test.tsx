@@ -33,6 +33,8 @@ const currentUser = {
   lastName: 'Doe',
   roles: ['ACADEMIC_STAFF'],
   permissions: [],
+  totpEnabled: false,
+  hrStepUpExpiresAt: null,
 };
 
 describe('AuthProvider', () => {

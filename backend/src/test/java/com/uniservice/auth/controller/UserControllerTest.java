@@ -43,7 +43,8 @@ class UserControllerTest {
     @WithMockUser(username = "jdoe", roles = "ACADEMIC_STAFF")
     void me_returnsCurrentUser_forAuthenticatedUser() throws Exception {
         when(userQueryService.getCurrentUser(any())).thenReturn(
-                new MeResponse(1L, "jdoe", "jdoe@example.com", "Jane", "Doe", Set.of("ACADEMIC_STAFF"), Set.of("STAFF_READ")));
+                new MeResponse(1L, "jdoe", "jdoe@example.com", "Jane", "Doe", Set.of("ACADEMIC_STAFF"), Set.of("STAFF_READ"),
+                        false, null));
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk());

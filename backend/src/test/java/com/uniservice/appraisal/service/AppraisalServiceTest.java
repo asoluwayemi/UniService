@@ -10,6 +10,7 @@ import com.uniservice.notification.service.NotificationService;
 import com.uniservice.org.entity.OrgUnit;
 import com.uniservice.org.entity.OrgUnitStatus;
 import com.uniservice.org.entity.OrgUnitType;
+import com.uniservice.org.service.OrgUnitService;
 import com.uniservice.staff.entity.StaffProfile;
 import com.uniservice.staff.repository.StaffProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,7 @@ class AppraisalServiceTest {
     @Mock private AppraisalSickLeaveRepository sickLeaveRepository;
     @Mock private StaffProfileRepository staffProfileRepository;
     @Mock private NotificationService notificationService;
+    @Mock private OrgUnitService orgUnitService;
 
     private AppraisalService service;
 
@@ -48,7 +50,8 @@ class AppraisalServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AppraisalService(cycleRepository, formRepository, sickLeaveRepository, staffProfileRepository, notificationService);
+        service = new AppraisalService(cycleRepository, formRepository, sickLeaveRepository, staffProfileRepository,
+                notificationService, orgUnitService);
 
         staffUser = user(1L, "jdoe");
         unitHeadUser = user(2L, "unithead");
@@ -375,6 +378,81 @@ class AppraisalServiceTest {
         User stranger = user(99L, "stranger");
 
         assertThatThrownBy(() -> service.getById(50L, stranger))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void submitStaffBiodata_appraiseeIsUnitHeadThemself_escalatesToNextAncestorHead() {
+        // unitHeadUser is being appraised, and unitHeadUser also heads `unit` -- reviewing
+        // themself would be wrong, so the stage-one reviewer must escalate to the
+        // department head instead of resolving to unitHeadUser.
+        StaffProfile unitHeadProfile = StaffProfile.builder().user(unitHeadUser).staffNumber("STAFF-0002")
+                .orgUnit(unit).dateOfHire(LocalDate.of(2020, 1, 1)).build();
+        unitHeadProfile.setId(102L);
+
+        AppraisalCycle c = cycle(1L, 2026, AppraisalCycleStatus.OPEN);
+        AppraisalForm f = form(52L, c, unitHeadProfile, AppraisalStatus.STAFF_DRAFT);
+        when(formRepository.findById(52L)).thenReturn(Optional.of(f));
+        when(formRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(sickLeaveRepository.findByAppraisalForm(f)).thenReturn(List.of());
+
+        StaffSubmitBiodataRequest req = new StaffSubmitBiodataRequest();
+        req.setScheduleOfDuties("Manage the lab");
+
+        service.submitStaffBiodata(52L, req, unitHeadUser);
+
+        verify(notificationService).notify(eq(deptHeadUser), anyString(), anyString());
+        verify(notificationService, never()).notify(eq(unitHeadUser), anyString(), anyString());
+    }
+
+    @Test
+    void submitStaffBiodata_headOfHrAppraisedByCollegeHead_bothStagesResolveToCollegeHead() {
+        User collegeHeadUser = user(4L, "collegehead");
+        User hrHeadUser = user(5L, "hrhead");
+
+        OrgUnit college = OrgUnit.builder().name("College").code("COL").type(OrgUnitType.COLLEGE)
+                .status(OrgUnitStatus.ACTIVE).head(collegeHeadUser).build();
+        college.setId(20L);
+        OrgUnit hrDept = OrgUnit.builder().name("HR").code("HR").type(OrgUnitType.DEPARTMENT)
+                .status(OrgUnitStatus.ACTIVE).parent(college).head(hrHeadUser).hrUnit(true).build();
+        hrDept.setId(21L);
+
+        StaffProfile hrHeadProfile = StaffProfile.builder().user(hrHeadUser).staffNumber("STAFF-0003")
+                .orgUnit(hrDept).dateOfHire(LocalDate.of(2020, 1, 1)).build();
+        hrHeadProfile.setId(103L);
+
+        AppraisalCycle c = cycle(1L, 2026, AppraisalCycleStatus.OPEN);
+        AppraisalForm f = form(53L, c, hrHeadProfile, AppraisalStatus.STAFF_DRAFT);
+        when(formRepository.findById(53L)).thenReturn(Optional.of(f));
+        when(formRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(sickLeaveRepository.findByAppraisalForm(f)).thenReturn(List.of());
+
+        StaffSubmitBiodataRequest req = new StaffSubmitBiodataRequest();
+        req.setScheduleOfDuties("Run HR");
+
+        service.submitStaffBiodata(53L, req, hrHeadUser);
+
+        // Stage one (Head of Unit step) skips hrHeadUser (the appraisee) and escalates to
+        // the College head, since HR's own head IS the appraisee here.
+        verify(notificationService).notify(eq(collegeHeadUser), anyString(), anyString());
+    }
+
+    @Test
+    void listForStaff_ownerCanViewTheirOwnHistory() {
+        when(staffProfileRepository.findById(100L)).thenReturn(Optional.of(staffProfile));
+        when(formRepository.findByStaffProfileOrderByCreatedAtDesc(staffProfile)).thenReturn(List.of());
+
+        List<AppraisalSummaryResponse> result = service.listForStaff(100L, staffUser);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void listForStaff_unrelatedUserWithoutPermission_throws() {
+        when(staffProfileRepository.findById(100L)).thenReturn(Optional.of(staffProfile));
+        User stranger = user(99L, "stranger");
+
+        assertThatThrownBy(() -> service.listForStaff(100L, stranger))
                 .isInstanceOf(AccessDeniedException.class);
     }
 }

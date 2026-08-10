@@ -8,6 +8,8 @@ import com.uniservice.auth.repository.UserRepository;
 import com.uniservice.org.entity.OrgUnit;
 import com.uniservice.org.entity.OrgUnitStatus;
 import com.uniservice.org.repository.OrgUnitRepository;
+import com.uniservice.org.service.OrgUnitService;
+import com.uniservice.org.service.RoleSyncService;
 import com.uniservice.staff.dto.*;
 import com.uniservice.staff.entity.AcademicQualification;
 import com.uniservice.staff.entity.EmploymentHistory;
@@ -16,12 +18,13 @@ import com.uniservice.staff.repository.AcademicQualificationRepository;
 import com.uniservice.staff.repository.EmploymentHistoryRepository;
 import com.uniservice.staff.repository.StaffProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -35,18 +38,48 @@ public class StaffProfileService {
     private final UserRepository userRepository;
     private final OrgUnitRepository orgUnitRepository;
     private final AppraisalService appraisalService;
+    private final OrgUnitService orgUnitService;
+    private final RoleSyncService roleSyncService;
 
-    public List<StaffProfileSummaryResponse> listAll() {
-        return staffProfileRepository.findAll().stream().map(StaffProfileSummaryResponse::from).toList();
+    public List<StaffProfileSummaryResponse> listAll(User caller) {
+        if (hasAuthority(caller, "STAFF_READ")) {
+            return staffProfileRepository.findAll().stream().map(StaffProfileSummaryResponse::from).toList();
+        }
+        Set<Long> allowedOrgUnitIds = orgUnitService.descendantOrgUnitIdsForHeadedUnits(caller);
+        return staffProfileRepository.findAll().stream()
+                .filter(p -> isOwnProfile(p, caller)
+                        || (p.getOrgUnit() != null && allowedOrgUnitIds.contains(p.getOrgUnit().getId())))
+                .map(StaffProfileSummaryResponse::from)
+                .toList();
     }
 
-    public StaffProfileResponse getById(Long id) {
-        return toResponse(findProfile(id));
+    public StaffProfileResponse getById(Long id, User caller) {
+        StaffProfile profile = findProfile(id);
+        assertCanView(profile, caller);
+        return toResponse(profile);
+    }
+
+    public StaffProfile getOrCreateProfileFor(User currentUser) {
+        return staffProfileRepository.findByUser(currentUser)
+                .orElseGet(() -> {
+                    String staffNum = "STAFF-" + String.format("%04d", currentUser.getId());
+                    StaffProfile newProfile = StaffProfile.builder()
+                            .user(currentUser)
+                            .staffNumber(staffNum)
+                            .category(com.uniservice.staff.entity.StaffCategory.ACADEMIC)
+                            .employmentType(com.uniservice.staff.entity.EmploymentType.FULL_TIME)
+                            .employmentStatus(com.uniservice.staff.entity.EmploymentStatus.ACTIVE)
+                            .dateOfHire(java.time.LocalDate.now())
+                            .gradeLevel(10)
+                            .gradeStep(1)
+                            .designation("Staff Member")
+                            .build();
+                    return staffProfileRepository.save(newProfile);
+                });
     }
 
     public StaffProfileResponse getMine(User currentUser) {
-        StaffProfile profile = staffProfileRepository.findByUser(currentUser)
-                .orElseThrow(() -> new NoSuchElementException("No staff profile exists for this account yet"));
+        StaffProfile profile = getOrCreateProfileFor(currentUser);
         return toResponse(profile);
     }
 
@@ -93,9 +126,17 @@ public class StaffProfileService {
                 .presentScaleAndSalary(request.getPresentScaleAndSalary())
                 .dateOfNextIncrement(request.getDateOfNextIncrement())
                 .lastPromotionDate(request.getLastPromotionDate())
+                .promotionDueDate(request.getPromotionDueDate())
+                .gradeLevel(request.getGradeLevel())
+                .gradeStep(request.getGradeStep())
+                .cadre(request.getCadre())
+                .ippisNumber(request.getIppisNumber())
+                .nin(request.getNin())
+                .tin(request.getTin())
                 .build();
 
         StaffProfile saved = staffProfileRepository.save(profile);
+        roleSyncService.syncHrStaffRole(saved);
         return toResponse(saved);
     }
 
@@ -125,8 +166,16 @@ public class StaffProfileService {
         profile.setPresentScaleAndSalary(request.getPresentScaleAndSalary());
         profile.setDateOfNextIncrement(request.getDateOfNextIncrement());
         profile.setLastPromotionDate(request.getLastPromotionDate());
+        profile.setPromotionDueDate(request.getPromotionDueDate());
+        profile.setGradeLevel(request.getGradeLevel());
+        profile.setGradeStep(request.getGradeStep());
+        profile.setCadre(request.getCadre());
+        profile.setIppisNumber(request.getIppisNumber());
+        profile.setNin(request.getNin());
+        profile.setTin(request.getTin());
 
         StaffProfile saved = staffProfileRepository.save(profile);
+        roleSyncService.syncHrStaffRole(saved);
         return toResponse(saved);
     }
 
@@ -188,6 +237,27 @@ public class StaffProfileService {
                 .orElseThrow(() -> new NoSuchElementException("Staff profile not found"));
     }
 
+    private boolean isOwnProfile(StaffProfile profile, User caller) {
+        return profile.getUser() != null && profile.getUser().getId().equals(caller.getId());
+    }
+
+    private boolean hasAuthority(User user, String permissionName) {
+        return user.getRoles().stream()
+                .flatMap(r -> r.getPermissions().stream())
+                .anyMatch(p -> p.getName().equals(permissionName));
+    }
+
+    private void assertCanView(StaffProfile profile, User caller) {
+        if (isOwnProfile(profile, caller) || hasAuthority(caller, "STAFF_READ")) {
+            return;
+        }
+        Set<Long> allowedOrgUnitIds = orgUnitService.descendantOrgUnitIdsForHeadedUnits(caller);
+        boolean inSubtree = profile.getOrgUnit() != null && allowedOrgUnitIds.contains(profile.getOrgUnit().getId());
+        if (!inSubtree) {
+            throw new AccessDeniedException("You do not have access to this staff profile");
+        }
+    }
+
     private void assertStaffNumberAvailable(String staffNumber, Long excludingProfileId) {
         staffProfileRepository.findByStaffNumber(staffNumber)
                 .filter(existing -> !existing.getId().equals(excludingProfileId))
@@ -212,7 +282,13 @@ public class StaffProfileService {
         List<AcademicQualification> qualifications = qualificationRepository.findByStaffProfile(profile);
         List<EmploymentHistory> employmentHistory = employmentHistoryRepository.findByStaffProfile(profile);
         int completedAppraisalsSincePromotion = appraisalService.countCompletedAppraisalsSincePromotion(profile);
-        boolean eligibleForPromotion = completedAppraisalsSincePromotion >= 3;
+
+        java.time.LocalDate baseline = profile.getLastPromotionDate() != null ? profile.getLastPromotionDate()
+                : profile.getDateAppointedToPresentPost() != null ? profile.getDateAppointedToPresentPost()
+                : profile.getDateOfHire();
+        boolean tenureFulfilled = baseline != null && !java.time.LocalDate.now().isBefore(baseline.plusYears(3));
+        boolean eligibleForPromotion = completedAppraisalsSincePromotion >= 3 && tenureFulfilled;
+
         return StaffProfileResponse.from(profile, qualifications, employmentHistory,
                 completedAppraisalsSincePromotion, eligibleForPromotion);
     }

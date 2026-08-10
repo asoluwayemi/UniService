@@ -17,4 +17,5 @@ public class SubmitChangeRequestRequest {
     private OrgUnitType proposedType;
     private Long proposedParentId;
     private Long proposedHeadId;
+    private Boolean proposedIsHrUnit;
 }

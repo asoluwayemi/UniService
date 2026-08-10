@@ -1,0 +1,6 @@
+package com.uniservice.promotion.entity;
+
+public enum PromotionApplicationStatus {
+    SUBMITTED, DOCUMENTS_PENDING, DOCUMENTS_VERIFIED, EXAM_SCHEDULED,
+    ORAL_INTERVIEW_SCHEDULED, RECOMMENDED, APPROVED, GAZETTED, REJECTED
+}
