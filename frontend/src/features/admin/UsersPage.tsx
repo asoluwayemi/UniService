@@ -74,7 +74,7 @@ export function UsersPage() {
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                      {u.roles.map((role) => (
+                      {(u.roles ?? []).map((role) => (
                         <Chip key={role} label={role} size="small" color="primary" variant="outlined" />
                       ))}
                     </Stack>

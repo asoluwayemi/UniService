@@ -290,7 +290,7 @@ export function DashboardLayout() {
               {user?.firstName} {user?.lastName}
             </Typography>
             <Typography variant="caption" sx={{ color: stepUpActive ? '#6ee7b7' : '#a78bfa', fontWeight: 600 }} noWrap>
-              {stepUpActive ? 'HR Officer Active' : user?.roles[0] ? formatRoleLabel(user.roles[0]) : 'Staff'}
+              {stepUpActive ? 'HR Officer Active' : (user?.roles ?? [])[0] ? formatRoleLabel((user?.roles ?? [])[0]) : 'Staff'}
             </Typography>
           </Box>
 

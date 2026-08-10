@@ -21,7 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchCurrentUser = useCallback(async () => {
     const response = await httpClient.get<CurrentUser>('/api/auth/me');
-    setUser(response.data);
+    // Normalize to ensure roles and permissions are always arrays
+    const data = response.data;
+    setUser({
+      ...data,
+      roles: Array.isArray(data.roles) ? data.roles : [],
+      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+    });
   }, []);
 
   useEffect(() => {
@@ -50,9 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const hasRole = useCallback((role: string) => user?.roles?.includes(role) ?? false, [user]);
+  const hasRole = useCallback((role: string) => (user?.roles ?? []).includes(role), [user]);
   const hasPermission = useCallback(
-    (permission: string) => user?.permissions?.includes(permission) ?? false,
+    (permission: string) => (user?.permissions ?? []).includes(permission),
     [user],
   );
 
