@@ -479,7 +479,7 @@ function RequestTable({
                 </TableCell>
                 <TableCell>
                   {r.allowanceEligible ? (
-                    <Chip size="small" label={r.allowanceHandoffStatus} color={r.allowanceHandoffStatus.includes('PROCESSED') ? 'success' : 'info'} />
+                    <Chip size="small" label={r.allowanceHandoffStatus} color={(r.allowanceHandoffStatus ?? '').includes('PROCESSED') ? 'success' : 'info'} />
                   ) : 'None'}
                 </TableCell>
                 <TableCell>
