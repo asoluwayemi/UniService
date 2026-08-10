@@ -77,7 +77,7 @@ class StaffProfileControllerTest {
                 "STAFF-0001", null, null, null, null, null, StaffCategory.ACADEMIC, "Lecturer",
                 null, null, EmploymentType.FULL_TIME, EmploymentStatus.ACTIVE,
                 LocalDate.of(2024, 1, 15), null, null, null, null, null,
-                null, null, null, null, null, null, 0, false, List.of(), List.of());
+                null, null, null, null, null, null, null, null, null, null, null, null, null, 0, false, List.of(), List.of());
     }
 
     @Test

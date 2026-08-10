@@ -14,6 +14,7 @@ import {
 import BadgeIcon from '@mui/icons-material/Badge';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import GroupIcon from '@mui/icons-material/Group';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { httpClient } from '../../app/httpClient';
 import { useAuth } from '../../app/AuthContext';
@@ -78,8 +79,8 @@ export function HrPortalHome() {
     <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
         <Box>
-          <Typography variant="h4">HR Portal</Typography>
-          <Typography color="text.secondary">Verified access — staff records and HR administration.</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>HR Portal</Typography>
+          <Typography color="text.secondary">Verified access — staff records, registration, and HR administration.</Typography>
         </Box>
         <Button
           variant="outlined"
@@ -87,39 +88,56 @@ export function HrPortalHome() {
           startIcon={<LogoutIcon />}
           onClick={handleExit}
           disabled={exiting}
+          sx={{ borderRadius: '10px' }}
         >
           {exiting ? 'Exiting…' : 'Exit HR Portal'}
         </Button>
       </Stack>
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Card>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
               <Stack spacing={1.5}>
-                <BadgeIcon color="primary" />
-                <Typography variant="h6">Staff Directory</Typography>
+                <GroupIcon color="primary" />
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Staff Registration</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  View and update staff records.
+                  Register new staff accounts, assign roles, and manage system credentials.
                 </Typography>
-                <Button variant="outlined" onClick={() => navigate('/staff')} sx={{ alignSelf: 'flex-start' }}>
-                  Open
+                <Button variant="contained" onClick={() => navigate('/admin/users')} sx={{ alignSelf: 'flex-start', borderRadius: '8px' }}>
+                  Register Staff
                 </Button>
               </Stack>
             </CardContent>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Card>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Stack spacing={1.5}>
+                <BadgeIcon color="primary" />
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Staff Directory</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  View and update staff profiles, designations, and qualifications.
+                </Typography>
+                <Button variant="outlined" onClick={() => navigate('/staff')} sx={{ alignSelf: 'flex-start', borderRadius: '8px' }}>
+                  Open Directory
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
               <Stack spacing={1.5}>
                 <AccountTreeIcon color="primary" />
-                <Typography variant="h6">Organization</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Organization</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Browse the college / faculty / department / unit structure.
                 </Typography>
-                <Button variant="outlined" onClick={() => navigate('/organization')} sx={{ alignSelf: 'flex-start' }}>
-                  Open
+                <Button variant="outlined" onClick={() => navigate('/organization')} sx={{ alignSelf: 'flex-start', borderRadius: '8px' }}>
+                  Open Chart
                 </Button>
               </Stack>
             </CardContent>
@@ -133,7 +151,7 @@ export function HrPortalHome() {
             <Stack spacing={2} sx={{ maxWidth: 480 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <PersonAddIcon color="primary" />
-                <Typography variant="h6">Create HR User</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>Create HR User</Typography>
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 Creates a new account restricted to HR staff access.
@@ -158,7 +176,7 @@ export function HrPortalHome() {
                 variant="contained"
                 disabled={submitting || !form.username || !form.email || !form.password}
                 onClick={handleCreateHrUser}
-                sx={{ alignSelf: 'flex-start' }}
+                sx={{ alignSelf: 'flex-start', borderRadius: '10px' }}
               >
                 {submitting ? 'Creating…' : 'Create Account'}
               </Button>

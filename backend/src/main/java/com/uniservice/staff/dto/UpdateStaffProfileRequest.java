@@ -44,4 +44,11 @@ public class UpdateStaffProfileRequest {
     private String presentScaleAndSalary;
     private LocalDate dateOfNextIncrement;
     private LocalDate lastPromotionDate;
+    private LocalDate promotionDueDate;
+    private Integer gradeLevel;
+    private Integer gradeStep;
+    private String cadre;
+    private String ippisNumber;
+    private String nin;
+    private String tin;
 }

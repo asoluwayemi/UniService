@@ -65,6 +65,13 @@ export interface StaffProfile {
   presentScaleAndSalary: string | null;
   dateOfNextIncrement: string | null;
   lastPromotionDate: string | null;
+  promotionDueDate: string | null;
+  gradeLevel: number | null;
+  gradeStep: number | null;
+  cadre: string | null;
+  ippisNumber: string | null;
+  nin: string | null;
+  tin: string | null;
   completedAppraisalsSincePromotion: number;
   eligibleForPromotion: boolean;
   qualifications: AcademicQualification[];
@@ -105,6 +112,13 @@ export interface CreateStaffProfilePayload {
   presentScaleAndSalary?: string;
   dateOfNextIncrement?: string;
   lastPromotionDate?: string;
+  promotionDueDate?: string;
+  gradeLevel?: number;
+  gradeStep?: number;
+  cadre?: string;
+  ippisNumber?: string;
+  nin?: string;
+  tin?: string;
 }
 
 export interface AddQualificationPayload {

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class UserAdminService {
 
     /** Roles a non-SYSTEM_ADMIN actor (e.g. a Head of HR using HR_USER_MANAGE) may assign. */
-    private static final Set<String> HR_ASSIGNABLE_ROLES = Set.of("HR_STAFF");
+    private static final Set<String> HR_ASSIGNABLE_ROLES = Set.of("STAFF", "HR_STAFF");
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

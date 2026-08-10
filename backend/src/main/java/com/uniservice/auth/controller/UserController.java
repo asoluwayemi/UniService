@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN') or hasAuthority('HR_USER_MANAGE')")
     public List<UserSummaryResponse> users() {
         return userQueryService.listUsers();
     }

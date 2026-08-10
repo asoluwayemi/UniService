@@ -53,6 +53,10 @@ export function StaffProfileCard({ profile }: { profile: StaffProfile }) {
           <Field label="Present Scale and Salary" value={profile.presentScaleAndSalary} />
           <Field label="Date of Next Increment" value={profile.dateOfNextIncrement} />
           <Field label="Last Promotion Date" value={profile.lastPromotionDate} />
+          <Field label="Promotion Review Due" value={profile.promotionDueDate} />
+          <Field label="Grade Level / Step" value={profile.gradeLevel ? `GL ${profile.gradeLevel}${profile.gradeStep ? ` / ${profile.gradeStep}` : ''}` : null} />
+          <Field label="Cadre" value={profile.cadre} />
+          <Field label="IPPIS Number" value={profile.ippisNumber} />
         </Grid>
 
         <Divider sx={{ my: 2 }} />

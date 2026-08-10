@@ -21,8 +21,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Keeps a user's headship-derived roles (COLLEGE_ADMIN, FACULTY_ROLE, DEPARTMENT_ROLE,
- * UNIT_ROLE, HR_ADMIN) and HR-placement-derived role (HR_STAFF) in sync with the live org
+ * Keeps a user's headship-derived roles (COLLEGE_ADMIN, DEAN, HOD, HOU, HR_ADMIN)
+ * and HR-placement-derived role (HR_STAFF) in sync with the live org
  * chart. Every method does a full recompute from current DB state for the affected user(s)
  * rather than incrementing/decrementing — this is what makes it correct when a person heads
  * more than one unit (e.g. two Units, or a Department and separately the HR unit).
@@ -33,15 +33,15 @@ public class RoleSyncService {
 
     private static final Map<OrgUnitType, String> TYPE_ROLE = Map.of(
             OrgUnitType.COLLEGE, "COLLEGE_ADMIN",
-            OrgUnitType.FACULTY, "FACULTY_ROLE",
-            OrgUnitType.DEPARTMENT, "DEPARTMENT_ROLE",
-            OrgUnitType.UNIT, "UNIT_ROLE");
+            OrgUnitType.FACULTY, "DEAN",
+            OrgUnitType.DEPARTMENT, "HOD",
+            OrgUnitType.UNIT, "HOU");
 
     private static final String HR_ADMIN_ROLE = "HR_ADMIN";
     private static final String HR_STAFF_ROLE = "HR_STAFF";
 
     private static final Set<String> HEADSHIP_MANAGED_ROLES =
-            Set.of("COLLEGE_ADMIN", "FACULTY_ROLE", "DEPARTMENT_ROLE", "UNIT_ROLE", HR_ADMIN_ROLE);
+            Set.of("COLLEGE_ADMIN", "DEAN", "HOD", "HOU", HR_ADMIN_ROLE);
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

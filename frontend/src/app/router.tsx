@@ -17,6 +17,14 @@ import { AppraisalDetailPage } from '../features/appraisal/AppraisalDetailPage';
 import { TotpEnrollPage } from '../features/hr/TotpEnrollPage';
 import { HrStepUpPage } from '../features/hr/HrStepUpPage';
 import { HrPortalHome } from '../features/hr/HrPortalHome';
+import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
+import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
+
+import { DeanPortalPage } from '../features/leadership/DeanPortalPage';
+import { HodPortalPage } from '../features/leadership/HodPortalPage';
+import { HouPortalPage } from '../features/leadership/HouPortalPage';
+import { AcademicPortalPage } from '../features/academic/AcademicPortalPage';
+
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { RequireHrStepUp } from '../components/RequireHrStepUp';
 
@@ -36,6 +44,15 @@ export function AppRouter() {
         <Route path="/dashboard" element={<DashboardHome />} />
         <Route path="/account/password" element={<ChangePasswordPage />} />
         <Route path="/staff/me" element={<MyProfilePage />} />
+        <Route path="/academic-portal" element={<AcademicPortalPage />} />
+        <Route path="/leave" element={<LeaveRequestsPage />} />
+        <Route path="/career" element={<CareerProgressionPage />} />
+
+        {/* Academic Leadership Portals */}
+        <Route path="/dean" element={<DeanPortalPage />} />
+        <Route path="/hod" element={<HodPortalPage />} />
+        <Route path="/hou" element={<HouPortalPage />} />
+
         <Route
           path="/staff"
           element={
@@ -59,7 +76,7 @@ export function AppRouter() {
         <Route
           path="/admin/users"
           element={
-            <ProtectedRoute requiredRole="SYSTEM_ADMIN">
+            <ProtectedRoute requiredPermission="HR_USER_MANAGE">
               <UsersPage />
             </ProtectedRoute>
           }
