@@ -38,7 +38,8 @@ public class SecurityConfig {
             .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/token/refresh", "/api/auth/logout").permitAll()
-                .anyRequest().authenticated())
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -46,7 +47,11 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigin));
+        if ("*".equals(allowedOrigin)) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            config.setAllowedOrigins(List.of(allowedOrigin));
+        }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
