@@ -4,7 +4,7 @@ import { AcademicStaffDashboard } from './AcademicStaffDashboard';
 import { NonAcademicStaffDashboard } from './NonAcademicStaffDashboard';
 
 export function DashboardHome() {
-  const { user, hasPermission } = useAuth();
+  const { user, hasRole, hasPermission } = useAuth();
 
   if (!user) return null;
 
@@ -19,7 +19,7 @@ export function DashboardHome() {
     return <AdminDashboardHome />;
   }
 
-  if (user.roles.includes('NON_ACADEMIC_STAFF')) {
+  if (hasRole('NON_ACADEMIC_STAFF')) {
     return <NonAcademicStaffDashboard />;
   }
 
