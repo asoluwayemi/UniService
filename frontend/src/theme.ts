@@ -57,12 +57,20 @@ export const theme = createTheme({
       'Arial',
       'sans-serif',
     ].join(','),
-    h1: { fontWeight: 800 },
-    h2: { fontWeight: 800 },
-    h3: { fontWeight: 700 },
-    h4: { fontWeight: 700 },
-    h5: { fontWeight: 700 },
-    h6: { fontWeight: 700 },
+    fontSize: 13,
+    h1: { fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em' },
+    h2: { fontSize: '1.875rem', fontWeight: 800, letterSpacing: '-0.02em' },
+    h3: { fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.01em' },
+    h4: { fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.01em' },
+    h5: { fontSize: '1.05rem', fontWeight: 700 },
+    h6: { fontSize: '0.95rem', fontWeight: 700 },
+    subtitle1: { fontSize: '0.875rem', fontWeight: 600 },
+    subtitle2: { fontSize: '0.8rem', fontWeight: 600 },
+    body1: { fontSize: '0.85rem' },
+    body2: { fontSize: '0.78rem' },
+    button: { fontSize: '0.8rem' },
+    caption: { fontSize: '0.7rem' },
+    overline: { fontSize: '0.65rem' },
   },
   components: {
     MuiPaper: {
@@ -74,12 +82,35 @@ export const theme = createTheme({
       },
     },
     MuiButton: {
+      defaultProps: {
+        size: 'small',
+      },
       styleOverrides: {
         root: {
           textTransform: 'none',
           fontWeight: 700,
           borderRadius: 10,
         },
+      },
+    },
+    MuiIconButton: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiFormControl: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiSelect: {
+      defaultProps: {
+        size: 'small',
       },
     },
     MuiAppBar: {
@@ -101,10 +132,64 @@ export const theme = createTheme({
       },
     },
     MuiChip: {
+      defaultProps: {
+        size: 'small',
+      },
       styleOverrides: {
         root: {
           fontWeight: 700,
           borderRadius: 8,
+        },
+      },
+    },
+    MuiTable: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          fontSize: '0.8rem',
+          padding: '8px 12px',
+        },
+        head: {
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.03em',
+        },
+      },
+    },
+    MuiListItemText: {
+      styleOverrides: {
+        primary: {
+          fontSize: '0.85rem',
+        },
+        secondary: {
+          fontSize: '0.75rem',
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        input: {
+          fontSize: '0.85rem',
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          fontSize: '0.85rem',
+          minHeight: 'auto',
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          fontSize: '0.7rem',
         },
       },
     },

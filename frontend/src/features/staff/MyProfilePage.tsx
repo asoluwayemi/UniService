@@ -5,8 +5,10 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   IconButton,
+  LinearProgress,
   List,
   ListItem,
   ListItemSecondaryAction,
@@ -17,13 +19,17 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DescriptionIcon from '@mui/icons-material/Description';
+import EditIcon from '@mui/icons-material/Edit';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 import { httpClient } from '../../app/httpClient';
 import { StaffProfileCard } from './StaffProfileCard';
 import { AddQualificationDialog } from './AddQualificationDialog';
+import { EditContactInfoDialog } from './EditContactInfoDialog';
 import { AcademicProgressSection } from './AcademicProgressSection';
 import { NonAcademicProgressSection } from './NonAcademicProgressSection';
 import { GenerateCvModal } from './GenerateCvModal';
+import { profileCompleteness } from './profileCompleteness';
 import type { StaffProfile } from './types';
 
 export function MyProfilePage() {
@@ -31,6 +37,7 @@ export function MyProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [addQualificationOpen, setAddQualificationOpen] = useState(false);
+  const [editContactOpen, setEditContactOpen] = useState(false);
   const [cvModalOpen, setCvModalOpen] = useState(false);
 
   const loadProfile = () => {
@@ -48,7 +55,7 @@ export function MyProfilePage() {
   const removeQualification = async (qualificationId: number) => {
     if (!profile) return;
     try {
-      await httpClient.delete(`/api/staff/${profile.id}/qualifications/${qualificationId}`);
+      await httpClient.delete(`/api/staff/me/qualifications/${qualificationId}`);
       loadProfile();
     } catch {
       // ignore
@@ -68,6 +75,7 @@ export function MyProfilePage() {
   }
 
   const isAcademic = profile.category === 'ACADEMIC';
+  const completeness = profileCompleteness(profile);
 
   return (
     <Stack spacing={3.5}>
@@ -75,16 +83,53 @@ export function MyProfilePage() {
         <Typography variant="h4" sx={{ fontWeight: 800 }}>
           My Staff Profile
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<DescriptionIcon />}
-          onClick={() => setCvModalOpen(true)}
-          sx={{ fontWeight: 700, borderRadius: '10px', px: 2.5 }}
-        >
-          Generate CV
-        </Button>
+        <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => setEditContactOpen(true)}
+            sx={{ fontWeight: 700, borderRadius: '10px', px: 2.5 }}
+          >
+            Edit Contact Info
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<DescriptionIcon />}
+            onClick={() => setCvModalOpen(true)}
+            sx={{ fontWeight: 700, borderRadius: '10px', px: 2.5 }}
+          >
+            Generate CV
+          </Button>
+        </Stack>
       </Stack>
+
+      <Card>
+        <CardContent>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+              Profile Completeness
+            </Typography>
+            <Chip
+              label={`${completeness.percent}%`}
+              size="small"
+              color={completeness.percent === 100 ? 'success' : completeness.percent >= 60 ? 'warning' : 'error'}
+              sx={{ fontWeight: 700 }}
+            />
+          </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={completeness.percent}
+            color={completeness.percent === 100 ? 'success' : completeness.percent >= 60 ? 'warning' : 'error'}
+            sx={{ height: 8, borderRadius: 4, mb: completeness.missing.length > 0 ? 1 : 0 }}
+          />
+          {completeness.missing.length > 0 && (
+            <Typography variant="caption" color="text.secondary">
+              Missing: {completeness.missing.join(', ')}
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
 
       <StaffProfileCard profile={profile} />
 
@@ -124,10 +169,33 @@ export function MyProfilePage() {
                 <ListItem key={q.id} divider>
                   <ListItemText
                     primary={`${q.degree}${q.fieldOfStudy ? ` — ${q.fieldOfStudy}` : ''}`}
-                    secondary={`${q.institution}${q.yearObtained ? ` (${q.yearObtained})` : ''}`}
+                    secondary={
+                      <>
+                        {`${q.institution}${q.yearObtained ? ` (${q.yearObtained})` : ''}`}
+                        {q.documentUrl && (
+                          <Chip
+                            size="small"
+                            icon={<InsertDriveFileIcon sx={{ fontSize: 13 }} />}
+                            label="Document Attached"
+                            component="a"
+                            href={q.documentUrl}
+                            target="_blank"
+                            clickable
+                            color="primary"
+                            variant="outlined"
+                            sx={{ ml: 1, fontSize: '10px' }}
+                          />
+                        )}
+                      </>
+                    }
                   />
                   <ListItemSecondaryAction>
-                    <IconButton edge="end" color="error" onClick={() => removeQualification(q.id)}>
+                    <IconButton
+                      edge="end"
+                      color="error"
+                      aria-label={`Remove ${q.degree} qualification`}
+                      onClick={() => removeQualification(q.id)}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </ListItemSecondaryAction>
@@ -164,10 +232,21 @@ export function MyProfilePage() {
       {addQualificationOpen && (
         <AddQualificationDialog
           open
-          staffProfileId={profile.id}
           onClose={() => setAddQualificationOpen(false)}
           onAdded={() => {
             setAddQualificationOpen(false);
+            loadProfile();
+          }}
+        />
+      )}
+
+      {editContactOpen && (
+        <EditContactInfoDialog
+          open
+          profile={profile}
+          onClose={() => setEditContactOpen(false)}
+          onSaved={() => {
+            setEditContactOpen(false);
             loadProfile();
           }}
         />

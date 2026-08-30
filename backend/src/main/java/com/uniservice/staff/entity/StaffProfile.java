@@ -116,4 +116,13 @@ public class StaffProfile extends BaseEntity {
 
     @Column(length = 50)
     private String tin;
+
+    @Column(name = "emergency_contact_name", length = 150)
+    private String emergencyContactName;
+
+    @Column(name = "emergency_contact_relationship", length = 100)
+    private String emergencyContactRelationship;
+
+    @Column(name = "emergency_contact_phone", length = 30)
+    private String emergencyContactPhone;
 }

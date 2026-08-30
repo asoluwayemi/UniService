@@ -24,12 +24,6 @@ public class HrStepUpController {
         return hrStepUpService.verify(principal.getUser(), request.getCode());
     }
 
-    @PostMapping("/elevate")
-    @PreAuthorize("hasAuthority('HR_PORTAL_ACCESS')")
-    public HrStepUpResponse elevate(@AuthenticationPrincipal UserPrincipal principal) {
-        return hrStepUpService.verify(principal.getUser(), "123456");
-    }
-
     @PostMapping("/exit")
     @PreAuthorize("hasAuthority('HR_PORTAL_ACCESS')")
     public void exit(@AuthenticationPrincipal UserPrincipal principal) {

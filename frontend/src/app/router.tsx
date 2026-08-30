@@ -19,6 +19,9 @@ import { HrStepUpPage } from '../features/hr/HrStepUpPage';
 import { HrPortalHome } from '../features/hr/HrPortalHome';
 import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
 import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
+import { PromotionReviewPage } from '../features/promotion/PromotionReviewPage';
+import { PromotionApplicationDetailPage } from '../features/promotion/PromotionApplicationDetailPage';
+import { DeveloperPage } from '../features/devops/DeveloperPage';
 
 import { DeanPortalPage } from '../features/leadership/DeanPortalPage';
 import { HodPortalPage } from '../features/leadership/HodPortalPage';
@@ -47,6 +50,23 @@ export function AppRouter() {
         <Route path="/academic-portal" element={<AcademicPortalPage />} />
         <Route path="/leave" element={<LeaveRequestsPage />} />
         <Route path="/career" element={<CareerProgressionPage />} />
+        <Route path="/promotions/:id" element={<PromotionApplicationDetailPage />} />
+        <Route
+          path="/promotions/review"
+          element={
+            <ProtectedRoute requiredPermission="PROMOTION_MANAGE">
+              <PromotionReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/developer"
+          element={
+            <ProtectedRoute requiredPermission="DEPLOYMENT_TRIGGER">
+              <DeveloperPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Academic Leadership Portals */}
         <Route path="/dean" element={<DeanPortalPage />} />

@@ -77,7 +77,7 @@ class StaffProfileControllerTest {
                 "STAFF-0001", null, null, null, null, null, StaffCategory.ACADEMIC, "Lecturer",
                 null, null, EmploymentType.FULL_TIME, EmploymentStatus.ACTIVE,
                 LocalDate.of(2024, 1, 15), null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, 0, false, List.of(), List.of());
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0, false, List.of(), List.of());
     }
 
     @Test
@@ -134,5 +134,42 @@ class StaffProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userId\":1,\"staffNumber\":\"STAFF-0001\",\"category\":\"ACADEMIC\",\"employmentType\":\"FULL_TIME\",\"dateOfHire\":\"2024-01-15\"}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateMyContactInfo_isOk_forAnyAuthenticatedUser_withoutStaffWriteOrStepUp() throws Exception {
+        when(staffProfileService.updateMyContactInfo(any(), any())).thenReturn(sampleResponse());
+
+        mockMvc.perform(patch("/api/staff/me")
+                        .with(authentication(authAsWithoutStepUp("jdoe")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phone\":\"08000000000\",\"emergencyContactName\":\"John Doe\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void addMyQualification_isOk_forAnyAuthenticatedUser_withoutStaffWriteOrStepUp() throws Exception {
+        when(staffProfileService.addMyQualification(any(), any())).thenReturn(sampleResponse());
+
+        mockMvc.perform(post("/api/staff/me/qualifications")
+                        .with(authentication(authAsWithoutStepUp("jdoe")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"degree\":\"MSc\",\"institution\":\"University of Lagos\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void removeMyQualification_isOk_forAnyAuthenticatedUser_withoutStaffWriteOrStepUp() throws Exception {
+        when(staffProfileService.removeMyQualification(any(), any())).thenReturn(sampleResponse());
+
+        mockMvc.perform(delete("/api/staff/me/qualifications/7")
+                        .with(authentication(authAsWithoutStepUp("jdoe"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void updateMyContactInfo_isUnauthorized_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(patch("/api/staff/me").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
     }
 }

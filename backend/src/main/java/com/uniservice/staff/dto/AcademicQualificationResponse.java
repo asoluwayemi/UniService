@@ -7,10 +7,11 @@ public record AcademicQualificationResponse(
         String degree,
         String fieldOfStudy,
         String institution,
-        Integer yearObtained
+        Integer yearObtained,
+        String documentUrl
 ) {
     public static AcademicQualificationResponse from(AcademicQualification q) {
         return new AcademicQualificationResponse(
-                q.getId(), q.getDegree(), q.getFieldOfStudy(), q.getInstitution(), q.getYearObtained());
+                q.getId(), q.getDegree(), q.getFieldOfStudy(), q.getInstitution(), q.getYearObtained(), q.getDocumentUrl());
     }
 }

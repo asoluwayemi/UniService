@@ -15,4 +15,6 @@ public class AddQualificationRequest {
     private String institution;
 
     private Integer yearObtained;
+
+    private String documentUrl;
 }

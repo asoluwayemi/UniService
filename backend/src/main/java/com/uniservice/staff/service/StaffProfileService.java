@@ -83,6 +83,40 @@ public class StaffProfileService {
         return toResponse(profile);
     }
 
+    @Transactional
+    public StaffProfileResponse updateMyContactInfo(User currentUser, UpdateContactInfoRequest request) {
+        StaffProfile profile = getOrCreateProfileFor(currentUser);
+        profile.setDateOfBirth(request.getDateOfBirth());
+        profile.setGender(request.getGender());
+        profile.setPhone(request.getPhone());
+        profile.setAddress(request.getAddress());
+        profile.setNationality(request.getNationality());
+        profile.setEmergencyContactName(request.getEmergencyContactName());
+        profile.setEmergencyContactRelationship(request.getEmergencyContactRelationship());
+        profile.setEmergencyContactPhone(request.getEmergencyContactPhone());
+        StaffProfile saved = staffProfileRepository.save(profile);
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public StaffProfileResponse addMyQualification(User currentUser, AddQualificationRequest request) {
+        StaffProfile profile = getOrCreateProfileFor(currentUser);
+        return addQualification(profile, request);
+    }
+
+    @Transactional
+    public StaffProfileResponse removeMyQualification(User currentUser, Long qualificationId) {
+        StaffProfile profile = getOrCreateProfileFor(currentUser);
+        return removeQualification(profile, qualificationId);
+    }
+
+    public List<StaffColleagueResponse> listColleagues(User caller) {
+        return staffProfileRepository.findAll().stream()
+                .filter(p -> p.getUser() != null && !p.getUser().getId().equals(caller.getId()))
+                .map(StaffColleagueResponse::from)
+                .toList();
+    }
+
     public List<UserSummaryResponse> listEligibleUsers() {
         return userRepository.findAll().stream()
                 .filter(u -> !staffProfileRepository.existsByUser(u))
@@ -181,21 +215,28 @@ public class StaffProfileService {
 
     @Transactional
     public StaffProfileResponse addQualification(Long staffProfileId, AddQualificationRequest request) {
-        StaffProfile profile = findProfile(staffProfileId);
+        return addQualification(findProfile(staffProfileId), request);
+    }
+
+    @Transactional
+    public StaffProfileResponse removeQualification(Long staffProfileId, Long qualificationId) {
+        return removeQualification(findProfile(staffProfileId), qualificationId);
+    }
+
+    private StaffProfileResponse addQualification(StaffProfile profile, AddQualificationRequest request) {
         AcademicQualification qualification = AcademicQualification.builder()
                 .staffProfile(profile)
                 .degree(request.getDegree())
                 .fieldOfStudy(request.getFieldOfStudy())
                 .institution(request.getInstitution())
                 .yearObtained(request.getYearObtained())
+                .documentUrl(request.getDocumentUrl())
                 .build();
         qualificationRepository.save(qualification);
         return toResponse(profile);
     }
 
-    @Transactional
-    public StaffProfileResponse removeQualification(Long staffProfileId, Long qualificationId) {
-        StaffProfile profile = findProfile(staffProfileId);
+    private StaffProfileResponse removeQualification(StaffProfile profile, Long qualificationId) {
         AcademicQualification qualification = qualificationRepository.findById(qualificationId)
                 .orElseThrow(() -> new NoSuchElementException("Qualification not found"));
         if (!qualification.getStaffProfile().getId().equals(profile.getId())) {

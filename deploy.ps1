@@ -1,8 +1,18 @@
-﻿$repoPath = "C:\apps\uniservice"
+﻿# Fail fast on any cmdlet error instead of silently continuing in the wrong directory
+# (e.g. a missing $repoPath must never fall through to git/npm/mvn commands run from wherever
+# this script happened to be invoked).
+$ErrorActionPreference = "Stop"
+
+$repoPath = "C:\apps\uniservice"
 $logFile = "C:\apps\uniservice\deploy.log"
 
 function Log($msg) {
     "$(Get-Date -Format o) $msg" | Out-File -FilePath $logFile -Append
+}
+
+if (-not (Test-Path $repoPath)) {
+    Write-Error "Deploy checkout not found at $repoPath. Aborting before touching any other directory."
+    exit 1
 }
 
 Set-Location $repoPath

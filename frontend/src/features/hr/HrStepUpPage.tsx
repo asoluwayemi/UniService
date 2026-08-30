@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/LockOutlined';
-import KeyIcon from '@mui/icons-material/Key';
 import { httpClient } from '../../app/httpClient';
 import { useAuth } from '../../app/AuthContext';
 
@@ -10,12 +9,12 @@ export function HrStepUpPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { refreshUser } = useAuth();
-  const [code, setCode] = useState('123456');
+  const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleVerify(overrideCode?: string) {
-    const codeToVerify = overrideCode || code;
+  async function handleVerify() {
+    const codeToVerify = code;
     setError(null);
     setSubmitting(true);
     try {
@@ -60,7 +59,7 @@ export function HrStepUpPage() {
             </Stack>
 
             <Typography color="text.secondary" variant="body2">
-              Enter the 6-digit verification code from your authenticator app, or click below to elevate with the Master Dev Token.
+              Enter the 6-digit verification code from your authenticator app.
             </Typography>
 
             {error && <Alert severity="error" sx={{ borderRadius: '12px' }}>{error}</Alert>}
@@ -78,24 +77,11 @@ export function HrStepUpPage() {
             <Button
               variant="contained"
               size="large"
-              disabled={submitting || code.length === 0}
+              disabled={submitting || code.length !== 6}
               onClick={() => handleVerify()}
               sx={{ py: 1.4, borderRadius: '12px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
             >
-              {submitting ? 'Verifying…' : 'Verify & Enter HR Portal'}
-            </Button>
-
-            <Divider sx={{ my: 1 }}>OR</Divider>
-
-            <Button
-              variant="outlined"
-              color="secondary"
-              startIcon={<KeyIcon />}
-              disabled={submitting}
-              onClick={() => handleVerify('123456')}
-              sx={{ py: 1.2, borderRadius: '12px' }}
-            >
-              ⚡ Quick HR Portal Token Login (Token: 123456)
+              {submitting ? 'Verifying…' : 'Verify'}
             </Button>
           </Stack>
         </CardContent>

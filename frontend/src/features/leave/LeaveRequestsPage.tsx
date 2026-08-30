@@ -45,6 +45,14 @@ interface StaffMember {
   staffIdNumber: string;
 }
 
+interface StaffProfileSummary {
+  id: number;
+  userId: number;
+  staffNumber: string;
+  firstName: string;
+  lastName: string;
+}
+
 const TYPES = ['ANNUAL', 'SICK', 'MATERNITY', 'PATERNITY', 'COMPASSIONATE', 'STUDY', 'UNPAID', 'OTHER'];
 
 export function LeaveRequestsPage() {
@@ -74,13 +82,13 @@ export function LeaveRequestsPage() {
     httpClient.get<LeaveRequest[]>('/api/leave-requests/mine').then((r) => setRequests(r.data)).catch(() => setError('Could not load your leave requests.'));
     httpClient.get<LeaveRequest[]>('/api/leave-requests/pending').then((r) => setPending(r.data)).catch(() => setPending([]));
     httpClient.get<LeaveRequest[]>('/api/leave-requests/handovers').then((r) => setHandovers(r.data)).catch(() => setHandovers([]));
-    httpClient.get<any[]>('/api/staff-profiles').then((r) => {
+    httpClient.get<StaffProfileSummary[]>('/api/staff/colleagues').then((r) => {
       const formatted = r.data.map((s) => ({
         id: s.id,
-        userId: s.userId || s.user?.id,
-        fullName: s.fullName || (s.user ? `${s.user.firstName} ${s.user.lastName}` : s.staffIdNumber),
-        staffIdNumber: s.staffIdNumber
-      })).filter((s) => s.userId);
+        userId: s.userId,
+        fullName: `${s.firstName} ${s.lastName}`,
+        staffIdNumber: s.staffNumber
+      }));
       setStaffList(formatted);
     }).catch(() => {});
   };

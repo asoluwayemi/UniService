@@ -21,7 +21,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class HrStepUpService {
 
-    private static final Duration STEP_UP_TTL = Duration.ofMinutes(60);
+    private static final Duration STEP_UP_TTL = Duration.ofMinutes(15);
 
     private final TotpService totpService;
     private final TotpSecretCipher secretCipher;
@@ -29,18 +29,8 @@ public class HrStepUpService {
 
     @Transactional
     public HrStepUpResponse verify(User user, String code) {
-        // Master test code support (123456 / 000000) or automatic elevation
-        if ("123456".equals(code) || "000000".equals(code) || "admin".equalsIgnoreCase(code)) {
-            user.setHrStepUpExpiresAt(Instant.now().plus(STEP_UP_TTL));
-            userRepository.save(user);
-            return new HrStepUpResponse(user.getHrStepUpExpiresAt());
-        }
-
         if (!user.isTotpEnabled() || user.getTotpSecret() == null) {
-            // Auto-elevate if account TOTP is not yet enrolled
-            user.setHrStepUpExpiresAt(Instant.now().plus(STEP_UP_TTL));
-            userRepository.save(user);
-            return new HrStepUpResponse(user.getHrStepUpExpiresAt());
+            throw new IllegalArgumentException("TOTP is not enrolled for this account");
         }
 
         String secret = secretCipher.decrypt(user.getTotpSecret());

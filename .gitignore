@@ -5,7 +5,10 @@ node_modules/
 frontend/dist/
 scratch/
 .env
+.env*.local
 *.log
 *.zip
 *.tsbuildinfo
 .npm-cache/
+/uploads/
+backend/uploads/

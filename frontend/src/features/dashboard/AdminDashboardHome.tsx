@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SchoolIcon from '@mui/icons-material/School';
@@ -13,7 +13,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LockIcon from '@mui/icons-material/LockOutlined';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 import { useAuth } from '../../app/AuthContext';
@@ -158,6 +158,13 @@ export function AdminDashboardHome() {
     },
   ];
 
+  const orgCards = orgUnitCounts && [
+    { label: 'Colleges', count: orgUnitCounts.college, icon: <AccountBalanceIcon />, color: '#f59e0b' },
+    { label: 'Faculties', count: orgUnitCounts.faculty, icon: <ApartmentIcon />, color: '#f59e0b' },
+    { label: 'Departments', count: orgUnitCounts.department, icon: <AccountTreeIcon />, color: '#f59e0b' },
+    { label: 'Units', count: orgUnitCounts.unit, icon: <GroupWorkIcon />, color: '#f59e0b' },
+  ];
+
   return (
     <Stack spacing={3.5}>
       {/* Welcome Banner */}
@@ -170,105 +177,135 @@ export function AdminDashboardHome() {
         </Typography>
       </Box>
 
-      {/* VIBRANT TOP STAT CARDS ROW (Matching Screenshot #2 Top Row) */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
-        {/* Card 1: Total Staff */}
-        <Card sx={{ borderTop: '4px solid #10b981', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/staff')}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-              <Box>
-                <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  TOTAL STAFF
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
-                  {staffCount ?? '—'}
-                </Typography>
-              </Box>
-              <Avatar sx={{ bgcolor: 'rgba(16, 185, 129, 0.12)', color: '#10b981', width: 46, height: 46 }}>
-                <GroupsIcon />
-              </Avatar>
-            </Stack>
-            <Chip
-              size="small"
-              icon={<ArrowUpwardIcon sx={{ fontSize: '12px !important', color: '#065f46 !important' }} />}
-              label={staffCount !== null ? `${academicCount} Academic · ${staffCount - academicCount} Non-Academic` : 'Workforce Record'}
-              sx={{ bgcolor: '#d1fae5', color: '#065f46', fontWeight: 700, fontSize: '11px' }}
-            />
+      {!hrGateOk && (
+        <Card>
+          <CardContent sx={{ p: 3, textAlign: 'center' }}>
+            <LockIcon sx={{ fontSize: 32, color: 'text.secondary', mb: 1 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>HR Portal verification required</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Your role has access to sensitive HR data. Verify with your authenticator app to see it.
+            </Typography>
+            <Button variant="contained" onClick={() => navigate('/hr/step-up')}>
+              Verify now
+            </Button>
           </CardContent>
         </Card>
+      )}
 
-        {/* Card 2: Pending Approvals */}
-        <Card sx={{ borderTop: '4px solid #8b5cf6', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/organization/approvals')}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-              <Box>
-                <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  PENDING APPROVALS
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
-                  {pendingApprovalsCount ?? '—'}
-                </Typography>
-              </Box>
-              <Avatar sx={{ bgcolor: 'rgba(139, 92, 246, 0.12)', color: '#8b5cf6', width: 46, height: 46 }}>
-                <FactCheckIcon />
-              </Avatar>
-            </Stack>
-            <Chip
-              size="small"
-              label="Requires Executive Review"
-              sx={{ bgcolor: '#f3e8ff', color: '#6b21a8', fontWeight: 700, fontSize: '11px' }}
-            />
-          </CardContent>
-        </Card>
+      {hrGateOk && (
+        <>
+          {/* VIBRANT TOP STAT CARDS ROW (Matching Screenshot #2 Top Row) */}
+          {(canReadStaff || isSystemAdmin) && (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2.5 }}>
+              {canReadStaff && (
+                <Card sx={{ borderTop: '4px solid #10b981', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/staff')}>
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                      <Box>
+                        <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          Total Staff
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
+                          {staffCount ?? '—'}
+                        </Typography>
+                      </Box>
+                      <Avatar sx={{ bgcolor: 'rgba(16, 185, 129, 0.12)', color: '#10b981', width: 46, height: 46 }}>
+                        <GroupsIcon />
+                      </Avatar>
+                    </Stack>
+                    <Chip
+                      size="small"
+                      icon={<ArrowUpwardIcon sx={{ fontSize: '12px !important', color: '#065f46 !important' }} />}
+                      label={staffCount !== null ? `${academicCount} academic · ${staffCount - academicCount} non-academic` : 'Workforce Record'}
+                      sx={{ bgcolor: '#d1fae5', color: '#065f46', fontWeight: 700, fontSize: '11px' }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
-        {/* Card 3: System Users */}
-        <Card sx={{ borderTop: '4px solid #0284c7', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/admin/users')}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-              <Box>
-                <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  SYSTEM USERS
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
-                  {userCount ?? '—'}
-                </Typography>
-              </Box>
-              <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 46, height: 46 }}>
-                <ManageAccountsIcon />
-              </Avatar>
-            </Stack>
-            <Chip
-              size="small"
-              label="RBAC Accounts Active"
-              sx={{ bgcolor: '#e0f2fe', color: '#075985', fontWeight: 700, fontSize: '11px' }}
-            />
-          </CardContent>
-        </Card>
+              {isSystemAdmin && (
+                <Card sx={{ borderTop: '4px solid #8b5cf6', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/organization/approvals')}>
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                      <Box>
+                        <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          Pending Approvals
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
+                          {pendingApprovalsCount ?? '—'}
+                        </Typography>
+                      </Box>
+                      <Avatar sx={{ bgcolor: 'rgba(139, 92, 246, 0.12)', color: '#8b5cf6', width: 46, height: 46 }}>
+                        <FactCheckIcon />
+                      </Avatar>
+                    </Stack>
+                    <Chip
+                      size="small"
+                      label="Requires Executive Review"
+                      sx={{ bgcolor: '#f3e8ff', color: '#6b21a8', fontWeight: 700, fontSize: '11px' }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
-        {/* Card 4: Org Structure */}
-        <Card sx={{ borderTop: '4px solid #f59e0b', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/organization')}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-              <Box>
-                <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  FACULTIES & UNITS
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
-                  {(orgUnitCounts?.faculty ?? 0) + (orgUnitCounts?.department ?? 0)}
-                </Typography>
+              {isSystemAdmin && (
+                <Card sx={{ borderTop: '4px solid #0284c7', cursor: 'pointer', '&:hover': { transform: 'translateY(-2px)' }, transition: 'all 0.2s' }} onClick={() => navigate('/admin/users')}>
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                      <Box>
+                        <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          System Users
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
+                          {userCount ?? '—'}
+                        </Typography>
+                      </Box>
+                      <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 46, height: 46 }}>
+                        <ManageAccountsIcon />
+                      </Avatar>
+                    </Stack>
+                    <Chip
+                      size="small"
+                      label="RBAC Accounts Active"
+                      sx={{ bgcolor: '#e0f2fe', color: '#075985', fontWeight: 700, fontSize: '11px' }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </Box>
+          )}
+
+          {/* ORGANIZATION STRUCTURE */}
+          {canReadOrg && orgCards && (
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
+                Organization
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+                {orgCards.map((card) => (
+                  <Card key={card.label} sx={{ borderTop: `4px solid ${card.color}` }}>
+                    <CardActionArea onClick={() => navigate('/organization')} sx={{ p: 0.5 }}>
+                      <CardContent sx={{ p: 2 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                          <Box>
+                            <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                              {card.label}
+                            </Typography>
+                            <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
+                              {card.count}
+                            </Typography>
+                          </Box>
+                          <Avatar sx={{ bgcolor: 'rgba(245, 158, 11, 0.12)', color: card.color, width: 40, height: 40 }}>
+                            {card.icon}
+                          </Avatar>
+                        </Stack>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                ))}
               </Box>
-              <Avatar sx={{ bgcolor: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', width: 46, height: 46 }}>
-                <AccountBalanceIcon />
-              </Avatar>
-            </Stack>
-            <Chip
-              size="small"
-              label={`${orgUnitCounts?.college ?? 0} Colleges · ${orgUnitCounts?.faculty ?? 0} Faculties`}
-              sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '11px' }}
-            />
-          </CardContent>
-        </Card>
-      </Box>
+            </Box>
+          )}
 
       {/* QUICK ACTIONS GRID TILES (Matching Screenshot #2 Pastel Tiles Grid) */}
       <Box>
@@ -346,6 +383,8 @@ export function AdminDashboardHome() {
           </CardContent>
         </Card>
       </Box>
+        </>
+      )}
     </Stack>
   );
 }

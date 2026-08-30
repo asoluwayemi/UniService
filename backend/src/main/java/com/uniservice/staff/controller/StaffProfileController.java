@@ -36,6 +36,29 @@ public class StaffProfileController {
         return staffProfileService.getMine(principal.getUser());
     }
 
+    @PatchMapping("/me")
+    public StaffProfileResponse updateMyContactInfo(@RequestBody UpdateContactInfoRequest request,
+                                                      @AuthenticationPrincipal UserPrincipal principal) {
+        return staffProfileService.updateMyContactInfo(principal.getUser(), request);
+    }
+
+    @PostMapping("/me/qualifications")
+    public StaffProfileResponse addMyQualification(@Valid @RequestBody AddQualificationRequest request,
+                                                     @AuthenticationPrincipal UserPrincipal principal) {
+        return staffProfileService.addMyQualification(principal.getUser(), request);
+    }
+
+    @DeleteMapping("/me/qualifications/{qualificationId}")
+    public StaffProfileResponse removeMyQualification(@PathVariable Long qualificationId,
+                                                        @AuthenticationPrincipal UserPrincipal principal) {
+        return staffProfileService.removeMyQualification(principal.getUser(), qualificationId);
+    }
+
+    @GetMapping("/colleagues")
+    public List<StaffColleagueResponse> colleagues(@AuthenticationPrincipal UserPrincipal principal) {
+        return staffProfileService.listColleagues(principal.getUser());
+    }
+
     @GetMapping("/eligible-users")
     @PreAuthorize("hasAuthority('STAFF_WRITE') and @hrStepUp.verified(authentication)")
     public List<UserSummaryResponse> eligibleUsers() {

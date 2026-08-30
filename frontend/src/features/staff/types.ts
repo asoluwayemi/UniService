@@ -9,6 +9,7 @@ export interface AcademicQualification {
   fieldOfStudy: string | null;
   institution: string;
   yearObtained: number | null;
+  documentUrl: string | null;
 }
 
 export interface EmploymentHistoryEntry {
@@ -72,6 +73,9 @@ export interface StaffProfile {
   ippisNumber: string | null;
   nin: string | null;
   tin: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelationship: string | null;
+  emergencyContactPhone: string | null;
   completedAppraisalsSincePromotion: number;
   eligibleForPromotion: boolean;
   qualifications: AcademicQualification[];
@@ -126,6 +130,18 @@ export interface AddQualificationPayload {
   fieldOfStudy?: string;
   institution: string;
   yearObtained?: number;
+  documentUrl?: string;
+}
+
+export interface UpdateContactInfoPayload {
+  dateOfBirth?: string;
+  gender?: Gender;
+  phone?: string;
+  address?: string;
+  nationality?: string;
+  emergencyContactName?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactPhone?: string;
 }
 
 export interface AddEmploymentHistoryPayload {

@@ -7,6 +7,7 @@ import com.uniservice.staff.entity.StaffProfile;
 
 public record StaffProfileSummaryResponse(
         Long id,
+        Long userId,
         String staffNumber,
         String firstName,
         String lastName,
@@ -21,6 +22,7 @@ public record StaffProfileSummaryResponse(
     public static StaffProfileSummaryResponse from(StaffProfile p) {
         return new StaffProfileSummaryResponse(
                 p.getId(),
+                p.getUser().getId(),
                 p.getStaffNumber(),
                 p.getUser().getFirstName(),
                 p.getUser().getLastName(),

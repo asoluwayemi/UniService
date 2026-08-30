@@ -42,6 +42,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import SearchIcon from '@mui/icons-material/Search';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 
 import { useAuth } from '../../app/AuthContext';
 import { httpClient } from '../../app/httpClient';
@@ -114,8 +115,14 @@ export function DashboardLayout() {
     if (hasPermission('APPRAISAL_MANAGE')) {
       hrPortalItems.push({ label: 'Appraisal Cycles', to: '/appraisal-cycles', icon: <EventNoteIcon fontSize="small" />, badgeColor: '#f59e0b' });
     }
+    if (hasPermission('PROMOTION_MANAGE')) {
+      hrPortalItems.push({ label: 'Promotion Review', to: '/promotions/review', icon: <TrendingUpIcon fontSize="small" />, badgeColor: '#ec4899' });
+    }
     if (hasRole('SYSTEM_ADMIN')) {
       hrPortalItems.push({ label: 'Approvals Queue', to: '/organization/approvals', icon: <FactCheckIcon fontSize="small" />, badgeColor: '#ef4444' });
+    }
+    if (hasPermission('DEPLOYMENT_TRIGGER')) {
+      hrPortalItems.push({ label: 'Developer Tools', to: '/developer', icon: <RocketLaunchIcon fontSize="small" />, badgeColor: '#6366f1' });
     }
 
     sections.push({ label: 'HR SERVICES PORTAL', items: hrPortalItems });
@@ -155,6 +162,13 @@ export function DashboardLayout() {
         items: [{ label: 'Enter HR Portal', to: '/hr', icon: <AdminPanelSettingsIcon fontSize="small" />, badgeColor: '#14b8a6' }],
       });
     }
+
+    if (hasPermission('DEPLOYMENT_TRIGGER')) {
+      sections.push({
+        label: 'DEVELOPER TOOLS',
+        items: [{ label: 'Push / Deploy', to: '/developer', icon: <RocketLaunchIcon fontSize="small" />, badgeColor: '#6366f1' }],
+      });
+    }
   }
 
   function isItemActive(to: string): boolean {
@@ -173,6 +187,9 @@ export function DashboardLayout() {
     if (location.pathname === '/hou') return 'Head of Unit (HoU) Staff Appraisal Engine';
     if (location.pathname === '/leave') return 'Leave Management';
     if (location.pathname === '/career') return 'Career Progression';
+    if (location.pathname === '/promotions/review') return 'Promotion Review';
+    if (location.pathname === '/developer') return 'Developer Tools';
+    if (/^\/promotions\/\d+$/.test(location.pathname)) return 'Promotion Application';
     if (location.pathname === '/staff/me') return 'My Profile';
     if (location.pathname === '/staff') return 'Staff Directory';
     if (location.pathname === '/organization') return 'Organization Chart';

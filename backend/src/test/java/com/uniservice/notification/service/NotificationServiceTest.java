@@ -1,6 +1,7 @@
 package com.uniservice.notification.service;
 
 import com.uniservice.auth.entity.User;
+import com.uniservice.auth.repository.UserRepository;
 import com.uniservice.notification.entity.Notification;
 import com.uniservice.notification.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.*;
 class NotificationServiceTest {
 
     @Mock private NotificationRepository repository;
+    @Mock private UserRepository userRepository;
 
     private NotificationService service;
 
@@ -27,7 +29,7 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new NotificationService(repository);
+        service = new NotificationService(repository, userRepository);
         owner = new User();
         owner.setId(1L);
         owner.setUsername("jdoe");
@@ -64,5 +66,33 @@ class NotificationServiceTest {
                 .isInstanceOf(AccessDeniedException.class);
 
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void notify_savesNotification_whenRecipientHasNotificationsEnabled() {
+        owner.setNotificationsEnabled(true);
+
+        service.notify(owner, "hello", "/somewhere");
+
+        verify(repository).save(any(Notification.class));
+    }
+
+    @Test
+    void notify_skipsSave_whenRecipientHasNotificationsDisabled() {
+        owner.setNotificationsEnabled(false);
+
+        Notification result = service.notify(owner, "hello", "/somewhere");
+
+        assertThat(result).isNull();
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void updatePreference_persistsFlagOnUser() {
+        boolean result = service.updatePreference(owner, false);
+
+        assertThat(result).isFalse();
+        assertThat(owner.isNotificationsEnabled()).isFalse();
+        verify(userRepository).save(owner);
     }
 }

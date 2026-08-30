@@ -28,4 +28,7 @@ public class AcademicQualification extends BaseEntity {
 
     @Column(name = "year_obtained")
     private Integer yearObtained;
+
+    @Column(name = "document_url", length = 500)
+    private String documentUrl;
 }

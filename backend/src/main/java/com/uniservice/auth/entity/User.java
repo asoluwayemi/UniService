@@ -38,4 +38,7 @@ public class User extends BaseEntity{
  private Instant totpEnrolledAt;
  @Column(name="hr_step_up_expires_at")
  private Instant hrStepUpExpiresAt;
+ @Column(name="notifications_enabled", nullable=false)
+ @Builder.Default
+ private boolean notificationsEnabled=true;
 }

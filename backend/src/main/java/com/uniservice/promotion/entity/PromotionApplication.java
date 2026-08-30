@@ -22,4 +22,6 @@ public class PromotionApplication extends BaseEntity {
     @Column(name = "reviewer_comment", length = 2000) private String reviewerComment;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "reviewed_by") private User reviewedBy;
     @Column(name = "reviewed_at") private Instant reviewedAt;
+    @Column(name = "exam_scheduled_date") private LocalDate examScheduledDate;
+    @Column(name = "interview_scheduled_date") private LocalDate interviewScheduledDate;
 }

@@ -52,9 +52,9 @@ class RoleSyncServiceTest {
         user.setUsername("jdoe");
         user.setRoles(new HashSet<>());
 
-        departmentRole = Role.builder().name("DEPARTMENT_ROLE").build();
+        departmentRole = Role.builder().name("HOD").build();
         departmentRole.setId(10L);
-        unitRole = Role.builder().name("UNIT_ROLE").build();
+        unitRole = Role.builder().name("HOU").build();
         unitRole.setId(11L);
         hrAdminRole = Role.builder().name("HR_ADMIN").build();
         hrAdminRole.setId(12L);
@@ -75,7 +75,7 @@ class RoleSyncServiceTest {
     void reconcileHeadshipRoles_grantsRoleForHeadedUnit() {
         OrgUnit department = orgUnit(1L, OrgUnitType.DEPARTMENT, user, false);
         when(orgUnitRepository.findByHeadAndStatus(user, OrgUnitStatus.ACTIVE)).thenReturn(List.of(department));
-        when(roleRepository.findByName("DEPARTMENT_ROLE")).thenReturn(Optional.of(departmentRole));
+        when(roleRepository.findByName("HOD")).thenReturn(Optional.of(departmentRole));
 
         service.reconcileHeadshipRoles(user);
 
@@ -87,7 +87,7 @@ class RoleSyncServiceTest {
         OrgUnit unitA = orgUnit(1L, OrgUnitType.UNIT, user, false);
         OrgUnit unitB = orgUnit(2L, OrgUnitType.UNIT, user, false);
         when(orgUnitRepository.findByHeadAndStatus(user, OrgUnitStatus.ACTIVE)).thenReturn(List.of(unitA, unitB));
-        when(roleRepository.findByName("UNIT_ROLE")).thenReturn(Optional.of(unitRole));
+        when(roleRepository.findByName("HOU")).thenReturn(Optional.of(unitRole));
 
         service.reconcileHeadshipRoles(user);
 
@@ -99,8 +99,8 @@ class RoleSyncServiceTest {
         OrgUnit department = orgUnit(1L, OrgUnitType.DEPARTMENT, user, false);
         OrgUnit hrUnit = orgUnit(2L, OrgUnitType.UNIT, user, true);
         when(orgUnitRepository.findByHeadAndStatus(user, OrgUnitStatus.ACTIVE)).thenReturn(List.of(department, hrUnit));
-        when(roleRepository.findByName("DEPARTMENT_ROLE")).thenReturn(Optional.of(departmentRole));
-        when(roleRepository.findByName("UNIT_ROLE")).thenReturn(Optional.of(unitRole));
+        when(roleRepository.findByName("HOD")).thenReturn(Optional.of(departmentRole));
+        when(roleRepository.findByName("HOU")).thenReturn(Optional.of(unitRole));
         when(roleRepository.findByName("HR_ADMIN")).thenReturn(Optional.of(hrAdminRole));
 
         service.reconcileHeadshipRoles(user);

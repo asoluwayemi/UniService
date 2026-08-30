@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Card, CardContent, Chip, Grid, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, Grid, LinearProgress, Stack, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import PersonIcon from '@mui/icons-material/Person';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { useAuth } from '../../app/AuthContext';
 import { httpClient } from '../../app/httpClient';
 import { RecentNotificationsCard } from './RecentNotificationsCard';
+import { LeaveBalanceWidget } from './LeaveBalanceWidget';
+import { profileCompleteness } from '../staff/profileCompleteness';
 import type { StaffProfile } from '../staff/types';
+
+function daysUntil(dateStr: string): number {
+  const target = new Date(dateStr);
+  const today = new Date();
+  target.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
 
 interface StaffDashboardProps {
   audienceLabel: string;
@@ -75,6 +86,37 @@ export function StaffDashboard({ audienceLabel }: StaffDashboardProps) {
                   <Typography variant="body2">
                     <strong>Department</strong> {profile.orgUnitName ?? '—'}
                   </Typography>
+
+                  <Box sx={{ pt: 1 }}>
+                    <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Profile completeness
+                      </Typography>
+                      <Typography variant="caption" fontWeight={700}>
+                        {profileCompleteness(profile).percent}%
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      value={profileCompleteness(profile).percent}
+                      sx={{ height: 6, borderRadius: 3 }}
+                    />
+                  </Box>
+
+                  {profile.contractEndDate && daysUntil(profile.contractEndDate) <= 90 && (
+                    <Chip
+                      icon={<EventBusyIcon />}
+                      size="small"
+                      color={daysUntil(profile.contractEndDate) <= 30 ? 'error' : 'warning'}
+                      label={
+                        daysUntil(profile.contractEndDate) >= 0
+                          ? `Contract ends in ${daysUntil(profile.contractEndDate)} days`
+                          : 'Contract has ended'
+                      }
+                      sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
+                    />
+                  )}
+
                   <Button
                     variant="outlined"
                     size="small"
@@ -89,6 +131,12 @@ export function StaffDashboard({ audienceLabel }: StaffDashboardProps) {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 5 }}>
+          <LeaveBalanceWidget />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <RecentNotificationsCard />
         </Grid>
       </Grid>

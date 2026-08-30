@@ -23,7 +23,6 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -68,7 +67,7 @@ class StaffProfileServiceTest {
         r.setStaffNumber("STAFF-0001");
         r.setCategory(StaffCategory.ACADEMIC);
         r.setEmploymentType(EmploymentType.FULL_TIME);
-        r.setDateOfHire(LocalDate.of(2024, 1, 15));
+        r.setDateOfHire(LocalDate.now().minusYears(4));
         return r;
     }
 
@@ -139,10 +138,22 @@ class StaffProfileServiceTest {
     }
 
     @Test
-    void getMine_noProfile_throwsNoSuchElement() {
+    void getMine_noProfile_autoCreatesProfileWithDefaults() {
         when(staffProfileRepository.findByUser(user)).thenReturn(Optional.empty());
+        when(staffProfileRepository.save(any(StaffProfile.class))).thenAnswer(inv -> {
+            StaffProfile p = inv.getArgument(0);
+            p.setId(20L);
+            return p;
+        });
+        when(qualificationRepository.findByStaffProfile(any())).thenReturn(List.of());
+        when(employmentHistoryRepository.findByStaffProfile(any())).thenReturn(List.of());
+        when(appraisalService.countCompletedAppraisalsSincePromotion(any())).thenReturn(0);
 
-        assertThatThrownBy(() -> service.getMine(user)).isInstanceOf(NoSuchElementException.class);
+        StaffProfileResponse result = service.getMine(user);
+
+        assertThat(result.id()).isEqualTo(20L);
+        assertThat(result.userId()).isEqualTo(user.getId());
+        assertThat(result.staffNumber()).isEqualTo("STAFF-0001");
     }
 
     @Test
@@ -253,5 +264,74 @@ class StaffProfileServiceTest {
         stranger.setUsername("stranger");
 
         assertThatThrownBy(() -> service.getById(1L, stranger)).isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void updateMyContactInfo_updatesOnlyContactFieldsOnCallersOwnProfile() {
+        StaffProfile profile = StaffProfile.builder().user(user).staffNumber("STAFF-0001")
+                .designation("Lecturer").build();
+        profile.setId(1L);
+        when(staffProfileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(staffProfileRepository.save(any(StaffProfile.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(qualificationRepository.findByStaffProfile(profile)).thenReturn(List.of());
+        when(employmentHistoryRepository.findByStaffProfile(profile)).thenReturn(List.of());
+        when(appraisalService.countCompletedAppraisalsSincePromotion(any())).thenReturn(0);
+
+        UpdateContactInfoRequest request = new UpdateContactInfoRequest();
+        request.setPhone("08000000000");
+        request.setAddress("1 University Road");
+        request.setNationality("Nigerian");
+        request.setEmergencyContactName("John Doe");
+        request.setEmergencyContactRelationship("Spouse");
+        request.setEmergencyContactPhone("08011111111");
+
+        StaffProfileResponse result = service.updateMyContactInfo(user, request);
+
+        assertThat(result.phone()).isEqualTo("08000000000");
+        assertThat(result.emergencyContactName()).isEqualTo("John Doe");
+        assertThat(result.emergencyContactPhone()).isEqualTo("08011111111");
+        // Employment fields set on the profile before the update must be untouched.
+        assertThat(result.designation()).isEqualTo("Lecturer");
+    }
+
+    @Test
+    void addMyQualification_attachesToCallersOwnProfile_notAnArbitraryId() {
+        StaffProfile profile = StaffProfile.builder().user(user).staffNumber("STAFF-0001").build();
+        profile.setId(1L);
+        when(staffProfileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(qualificationRepository.findByStaffProfile(profile)).thenReturn(List.of());
+        when(employmentHistoryRepository.findByStaffProfile(profile)).thenReturn(List.of());
+        when(appraisalService.countCompletedAppraisalsSincePromotion(any())).thenReturn(0);
+
+        AddQualificationRequest request = new AddQualificationRequest();
+        request.setDegree("MSc");
+        request.setInstitution("University of Lagos");
+        request.setDocumentUrl("/api/uploads/abc123");
+
+        StaffProfileResponse result = service.addMyQualification(user, request);
+
+        assertThat(result.id()).isEqualTo(1L);
+        org.mockito.Mockito.verify(staffProfileRepository, org.mockito.Mockito.never()).findById(any());
+    }
+
+    @Test
+    void removeMyQualification_belongingToSomeoneElse_throws() {
+        StaffProfile myProfile = StaffProfile.builder().user(user).staffNumber("STAFF-0001").build();
+        myProfile.setId(1L);
+        User otherUser = new User();
+        otherUser.setId(2L);
+        StaffProfile otherProfile = StaffProfile.builder().user(otherUser).staffNumber("STAFF-0002").build();
+        otherProfile.setId(2L);
+
+        AcademicQualification othersQualification = AcademicQualification.builder()
+                .staffProfile(otherProfile).degree("BSc").institution("X").build();
+        othersQualification.setId(7L);
+
+        when(staffProfileRepository.findByUser(user)).thenReturn(Optional.of(myProfile));
+        when(qualificationRepository.findById(7L)).thenReturn(Optional.of(othersQualification));
+
+        assertThatThrownBy(() -> service.removeMyQualification(user, 7L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("does not belong");
     }
 }

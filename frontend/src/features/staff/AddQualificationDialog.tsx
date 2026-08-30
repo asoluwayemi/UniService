@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Alert, Button, Dialog, DialogActions, DialogContent, Stack, TextField } from '@mui/material';
+import { useState, type ChangeEvent } from 'react';
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, Stack, TextField, Typography } from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { httpClient } from '../../app/httpClient';
 import type { AddQualificationPayload } from './types';
 
 interface AddQualificationDialogProps {
   open: boolean;
-  staffProfileId: number;
+  /** When omitted, adds to the current user's own profile via the self-service endpoint. */
+  staffProfileId?: number;
   onClose: () => void;
   onAdded: () => void;
 }
@@ -15,8 +17,30 @@ export function AddQualificationDialog({ open, staffProfileId, onClose, onAdded 
   const [fieldOfStudy, setFieldOfStudy] = useState('');
   const [institution, setInstitution] = useState('');
   const [yearObtained, setYearObtained] = useState('');
+  const [documentUrl, setDocumentUrl] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  async function handleFileUpload(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await httpClient.post<{ fileUrl: string }>('/api/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setDocumentUrl(res.data.fileUrl);
+    } catch {
+      setError('Failed to upload the proof document.');
+    } finally {
+      setUploadingFile(false);
+    }
+  }
 
   async function handleSubmit() {
     setError(null);
@@ -27,8 +51,10 @@ export function AddQualificationDialog({ open, staffProfileId, onClose, onAdded 
         institution,
         fieldOfStudy: fieldOfStudy || undefined,
         yearObtained: yearObtained ? Number(yearObtained) : undefined,
+        documentUrl: documentUrl || undefined,
       };
-      await httpClient.post(`/api/staff/${staffProfileId}/qualifications`, payload);
+      const endpoint = staffProfileId ? `/api/staff/${staffProfileId}/qualifications` : '/api/staff/me/qualifications';
+      await httpClient.post(endpoint, payload);
       onAdded();
     } catch (err: unknown) {
       const message =
@@ -61,6 +87,18 @@ export function AddQualificationDialog({ open, staffProfileId, onClose, onAdded 
             onChange={(e) => setYearObtained(e.target.value)}
             fullWidth
           />
+
+          <Box sx={{ p: 2, border: '2px dashed #cbd5e1', borderRadius: '12px', textAlign: 'center', bgcolor: '#f8fafc' }}>
+            <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} disabled={uploadingFile}>
+              {uploadingFile ? 'Uploading…' : 'Upload Certificate / Proof Document'}
+              <input type="file" hidden accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFileUpload} />
+            </Button>
+            {documentUrl && (
+              <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1, fontWeight: 700 }}>
+                Document attached
+              </Typography>
+            )}
+          </Box>
         </Stack>
       </DialogContent>
       <DialogActions>

@@ -57,6 +57,9 @@ export function StaffProfileCard({ profile }: { profile: StaffProfile }) {
           <Field label="Grade Level / Step" value={profile.gradeLevel ? `GL ${profile.gradeLevel}${profile.gradeStep ? ` / ${profile.gradeStep}` : ''}` : null} />
           <Field label="Cadre" value={profile.cadre} />
           <Field label="IPPIS Number" value={profile.ippisNumber} />
+          <Field label="Emergency Contact" value={profile.emergencyContactName} />
+          <Field label="Relationship" value={profile.emergencyContactRelationship} />
+          <Field label="Emergency Contact Phone" value={profile.emergencyContactPhone} />
         </Grid>
 
         <Divider sx={{ my: 2 }} />

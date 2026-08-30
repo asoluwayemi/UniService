@@ -31,4 +31,16 @@ public class NotificationController {
     public void markRead(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
         notificationService.markRead(id, principal.getUser());
     }
+
+    @GetMapping("/preferences")
+    public Map<String, Boolean> getPreferences(@AuthenticationPrincipal UserPrincipal principal) {
+        return Map.of("enabled", notificationService.getPreference(principal.getUser()));
+    }
+
+    @PutMapping("/preferences")
+    public Map<String, Boolean> updatePreferences(@RequestBody Map<String, Boolean> body,
+                                                    @AuthenticationPrincipal UserPrincipal principal) {
+        boolean enabled = Boolean.TRUE.equals(body.get("enabled"));
+        return Map.of("enabled", notificationService.updatePreference(principal.getUser(), enabled));
+    }
 }

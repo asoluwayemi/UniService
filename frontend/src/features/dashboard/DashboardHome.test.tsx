@@ -73,6 +73,7 @@ describe('DashboardHome', () => {
     mockedUseAuth.mockReturnValue(
       authValue({
         user: { id: 3, username: 'psupport', email: 'p@x.com', firstName: 'Pat', lastName: 'Support', roles: ['NON_ACADEMIC_STAFF'], permissions: [], totpEnabled: false, hrStepUpExpiresAt: null },
+        hasRole: (r: string) => r === 'NON_ACADEMIC_STAFF',
       }),
     );
 

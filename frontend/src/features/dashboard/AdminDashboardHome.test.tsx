@@ -179,7 +179,7 @@ describe('AdminDashboardHome', () => {
 
     renderPage();
 
-    await screen.findByText('Welcome back, HR');
+    await screen.findByText('Welcome back, HR', { exact: false });
     expect(screen.queryByText('Total Staff')).not.toBeInTheDocument();
     expect(screen.queryByText('Organization')).not.toBeInTheDocument();
     expect(screen.queryByText('Staff Directory')).not.toBeInTheDocument();
