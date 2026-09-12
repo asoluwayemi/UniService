@@ -1,5 +1,5 @@
--- DEVELOPER role + DEPLOYMENT_TRIGGER permission, and a seeded developer account for local
--- push/deploy tooling (see com.uniservice.devops).
+-- DEVELOPER role + DEPLOYMENT_TRIGGER permission for local push/deploy tooling (see com.uniservice.devops).
+-- Granted to the 'developer' account seeded in V22.
 
 CREATE TABLE deployment_runs (
     id BIGSERIAL PRIMARY KEY,
@@ -32,12 +32,8 @@ SELECT r.id, p.id FROM roles r, permissions p
 WHERE r.name = 'SYSTEM_ADMIN' AND p.name = 'DEPLOYMENT_TRIGGER'
 ON CONFLICT DO NOTHING;
 
--- Dev-only credential: username 'developer', password 'DevOps123!' (change before any shared/deployed use).
-INSERT INTO users (username, email, first_name, last_name, password_hash, enabled, created_at, updated_at)
-VALUES ('developer', 'developer@uniservice.local', 'Dev', 'Ops',
-        '$2a$10$q/Ezvd8D2PsFwdWH.m.RQOmbj4c3Mwt7hFa0W0xP85vPxJ8K/zjRy', true, now(), now())
-ON CONFLICT (username) DO NOTHING;
-
+-- The 'developer' account itself is seeded by V22 (developer@uniservice.local / Developer@123).
+-- Just add the DEVELOPER role to it here so it also gets DEPLOYMENT_TRIGGER.
 INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id FROM users u, roles r WHERE u.username = 'developer' AND r.name = 'DEVELOPER'
 ON CONFLICT DO NOTHING;

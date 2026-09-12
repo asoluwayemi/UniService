@@ -12,3 +12,6 @@ scratch/
 .npm-cache/
 /uploads/
 backend/uploads/
+# The embedded SPA build is generated fresh at deploy time (see deploy.ps1 / auto_update.sh) —
+# never commit it, since a stale copy can silently reintroduce fixed vulnerabilities.
+backend/src/main/resources/static/

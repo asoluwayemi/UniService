@@ -27,8 +27,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -94,5 +97,45 @@ class UserAdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(BODY))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void list_isOk_withUserManage() throws Exception {
+        when(userAdminService.listAllUsers()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/auth/users").with(authentication(authAs(false, "USER_MANAGE"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void list_isOk_withHrUserManage() throws Exception {
+        when(userAdminService.listAllUsers()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/auth/users").with(authentication(authAs(false, "HR_USER_MANAGE"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void list_isForbidden_withoutManagePermission() throws Exception {
+        mockMvc.perform(get("/api/auth/users").with(authentication(authAs(false, "STAFF_READ"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void setEnabled_isOk_withUserManage() throws Exception {
+        when(userAdminService.setEnabled(any(), eq(false), any())).thenReturn(
+                new UserSummaryResponse(10L, "newhr", "newhr@uniservice.local", "F", "L", false,
+                        new TreeSet<>(Set.of("HR_STAFF"))));
+
+        mockMvc.perform(patch("/api/auth/users/10/enable?enabled=false")
+                        .with(authentication(authAs(false, "USER_MANAGE"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void setEnabled_isForbidden_withoutUserManage() throws Exception {
+        mockMvc.perform(patch("/api/auth/users/10/enable?enabled=false")
+                        .with(authentication(authAs(false, "HR_USER_MANAGE"))))
+                .andExpect(status().isForbidden());
     }
 }

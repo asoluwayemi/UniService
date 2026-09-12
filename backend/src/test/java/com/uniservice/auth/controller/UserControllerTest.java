@@ -15,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -54,21 +53,5 @@ class UserControllerTest {
     void me_isUnauthorized_whenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = "SYSTEM_ADMIN")
-    void users_isOk_forSuperAdmin() throws Exception {
-        when(userQueryService.listUsers()).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/auth/users"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @WithMockUser(username = "jdoe", roles = "ACADEMIC_STAFF")
-    void users_isForbidden_forNonAdmin() throws Exception {
-        mockMvc.perform(get("/api/auth/users"))
-                .andExpect(status().isForbidden());
     }
 }
