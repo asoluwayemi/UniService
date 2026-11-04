@@ -34,6 +34,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import WorkIcon from '@mui/icons-material/Work';
 import PaymentsIcon from '@mui/icons-material/Payments';
@@ -120,6 +121,9 @@ export function DashboardLayout() {
     if (hasPermission('RECRUITMENT_MANAGE')) {
       hrPortalItems.push({ label: 'Recruitment', to: '/recruitment', icon: <WorkIcon fontSize="small" />, badgeColor: '#a855f7' });
     }
+    if (hasPermission('VAULT_MANAGE')) {
+      hrPortalItems.push({ label: 'Document Vault', to: '/vault', icon: <FolderSpecialIcon fontSize="small" />, badgeColor: '#0ea5e9' });
+    }
     if (hasPermission('ONBOARDING_MANAGE')) {
       hrPortalItems.push({ label: 'Onboarding', to: '/onboarding', icon: <HowToRegIcon fontSize="small" />, badgeColor: '#14b8a6' });
     }
@@ -151,6 +155,7 @@ export function DashboardLayout() {
       { label: 'My Profile', to: '/staff/me', icon: <PersonIcon fontSize="small" />, badgeColor: '#10b981' },
       { label: 'My Account', to: '/account/password', icon: <LockIcon fontSize="small" />, badgeColor: '#0284c7' },
       { label: 'Attendance', to: '/attendance', icon: <AccessTimeIcon fontSize="small" />, badgeColor: '#06b6d4' },
+      { label: 'My Documents', to: '/documents', icon: <FolderSpecialIcon fontSize="small" />, badgeColor: '#0ea5e9' },
       { label: 'My Payslips', to: '/payslips', icon: <PaymentsIcon fontSize="small" />, badgeColor: '#22c55e' },
       { label: 'Leave Requests', to: '/leave', icon: <BeachAccessIcon fontSize="small" />, badgeColor: '#f59e0b' },
       { label: 'Career Progression', to: '/career', icon: <TrendingUpIcon fontSize="small" />, badgeColor: '#ec4899' },

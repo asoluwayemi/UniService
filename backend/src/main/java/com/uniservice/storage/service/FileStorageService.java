@@ -73,4 +73,18 @@ public class FileStorageService {
             throw new IllegalStateException("Failed to load stored file", e);
         }
     }
+
+    /** Removes the file from disk and its metadata row. A missing file on disk is not an error. */
+    public void delete(StoredDocument document) {
+        try {
+            Path root = Paths.get(uploadsDir).toAbsolutePath().normalize();
+            Path file = root.resolve(document.getStorageKey()).normalize();
+            if (file.getParent().equals(root)) {
+                Files.deleteIfExists(file);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to delete stored file", e);
+        }
+        repository.delete(document);
+    }
 }

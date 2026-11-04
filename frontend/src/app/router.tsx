@@ -21,6 +21,8 @@ import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
 import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
 import { PromotionReviewPage } from '../features/promotion/PromotionReviewPage';
 import { PromotionApplicationDetailPage } from '../features/promotion/PromotionApplicationDetailPage';
+import { DocumentVaultPage } from '../features/vault/DocumentVaultPage';
+import { MyDocumentsPage } from '../features/vault/MyDocumentsPage';
 import { OnboardingPage } from '../features/onboarding/OnboardingPage';
 import { RecruitmentPage } from '../features/recruitment/RecruitmentPage';
 import { MyPayslipsPage } from '../features/payroll/MyPayslipsPage';
@@ -57,6 +59,15 @@ export function AppRouter() {
         <Route path="/leave" element={<LeaveRequestsPage />} />
         <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/payslips" element={<MyPayslipsPage />} />
+        <Route path="/documents" element={<MyDocumentsPage />} />
+        <Route
+          path="/vault"
+          element={
+            <ProtectedRoute requiredPermission="VAULT_MANAGE">
+              <DocumentVaultPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/onboarding"
           element={
