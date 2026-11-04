@@ -52,6 +52,9 @@ export function RecruitmentPage() {
   const [applicant, setApplicant] = useState({ applicantName: '', email: '', phone: '', coverNote: '' });
   const [rejecting, setRejecting] = useState<JobApplication | null>(null);
   const [reason, setReason] = useState('');
+  const [onboarding, setOnboarding] = useState<JobApplication | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
 
   const loadPostings = useCallback(async () => {
     try {
@@ -121,6 +124,15 @@ export function RecruitmentPage() {
       await loadApps(a.postingId);
     }, 'Could not move this application.');
 
+  const startOnboarding = () =>
+    run(async () => {
+      if (!onboarding) return;
+      await httpClient.post(`/api/onboarding/cases/from-application/${onboarding.id}`, { startDate });
+      setNotice(`Onboarding started for ${onboarding.applicantName}. Continue in the Onboarding page.`);
+      setOnboarding(null);
+      setStartDate('');
+    }, 'Could not start onboarding. It may already have been started.');
+
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
@@ -138,6 +150,11 @@ export function RecruitmentPage() {
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
+        </Alert>
+      )}
+      {notice && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {notice}
         </Alert>
       )}
 
@@ -212,6 +229,11 @@ export function RecruitmentPage() {
                           )}
                         </TableCell>
                         <TableCell align="right">
+                          {a.stage === 'HIRED' && (
+                            <Button size="small" color="success" onClick={() => setOnboarding(a)}>
+                              Start onboarding
+                            </Button>
+                          )}
                           {a.allowedNext.map((next) =>
                             next === 'REJECTED' ? (
                               <Button key={next} size="small" color="error" onClick={() => setRejecting(a)}>
@@ -289,6 +311,27 @@ export function RecruitmentPage() {
           <Button onClick={() => setApplicantOpen(false)}>Cancel</Button>
           <Button variant="contained" disabled={!applicant.applicantName || !applicant.email} onClick={() => void addApplicant()}>
             Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={onboarding !== null} onClose={() => setOnboarding(null)} fullWidth maxWidth="xs">
+        <DialogTitle>Start onboarding for {onboarding?.applicantName}</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            type="date"
+            label="Start date"
+            InputLabelProps={{ shrink: true }}
+            sx={{ mt: 1 }}
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOnboarding(null)}>Cancel</Button>
+          <Button variant="contained" disabled={!startDate} onClick={() => void startOnboarding()}>
+            Start
           </Button>
         </DialogActions>
       </Dialog>

@@ -34,6 +34,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 import WorkIcon from '@mui/icons-material/Work';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -118,6 +119,9 @@ export function DashboardLayout() {
     }
     if (hasPermission('RECRUITMENT_MANAGE')) {
       hrPortalItems.push({ label: 'Recruitment', to: '/recruitment', icon: <WorkIcon fontSize="small" />, badgeColor: '#a855f7' });
+    }
+    if (hasPermission('ONBOARDING_MANAGE')) {
+      hrPortalItems.push({ label: 'Onboarding', to: '/onboarding', icon: <HowToRegIcon fontSize="small" />, badgeColor: '#14b8a6' });
     }
     if (hasPermission('APPRAISAL_MANAGE')) {
       hrPortalItems.push({ label: 'Appraisal Cycles', to: '/appraisal-cycles', icon: <EventNoteIcon fontSize="small" />, badgeColor: '#f59e0b' });

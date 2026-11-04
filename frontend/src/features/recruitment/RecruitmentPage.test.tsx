@@ -106,4 +106,23 @@ describe('RecruitmentPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Move to shortlisted' }));
     expect(await screen.findByText('Could not move this application.')).toBeInTheDocument();
   });
+
+  it('starts onboarding for a hired applicant', async () => {
+    setup(posting(), [app({ stage: 'HIRED', allowedNext: [] })]);
+    mockedPost.mockResolvedValue({ data: {} });
+    render(<RecruitmentPage />);
+    await userEvent.click(await screen.findByText('Lecturer I'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Start onboarding' }));
+
+    const dialog = await screen.findByRole('dialog');
+    const start = within(dialog).getByRole('button', { name: 'Start' });
+    expect(start).toBeDisabled();
+    await userEvent.type(within(dialog).getByLabelText('Start date'), '2027-04-01');
+    await userEvent.click(start);
+
+    await waitFor(() =>
+      expect(mockedPost).toHaveBeenCalledWith('/api/onboarding/cases/from-application/9', { startDate: '2027-04-01' }),
+    );
+    expect(await screen.findByText(/Onboarding started for Ada Obi/)).toBeInTheDocument();
+  });
 });
