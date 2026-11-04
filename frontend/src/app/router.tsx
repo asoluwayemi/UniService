@@ -21,6 +21,8 @@ import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
 import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
 import { PromotionReviewPage } from '../features/promotion/PromotionReviewPage';
 import { PromotionApplicationDetailPage } from '../features/promotion/PromotionApplicationDetailPage';
+import { MyPayslipsPage } from '../features/payroll/MyPayslipsPage';
+import { PayrollRunsPage } from '../features/payroll/PayrollRunsPage';
 import { AttendancePage } from '../features/attendance/AttendancePage';
 import { AuditLogPage } from '../features/audit/AuditLogPage';
 import { DeveloperPage } from '../features/devops/DeveloperPage';
@@ -52,6 +54,15 @@ export function AppRouter() {
         <Route path="/academic-portal" element={<AcademicPortalPage />} />
         <Route path="/leave" element={<LeaveRequestsPage />} />
         <Route path="/attendance" element={<AttendancePage />} />
+        <Route path="/payslips" element={<MyPayslipsPage />} />
+        <Route
+          path="/payroll"
+          element={
+            <ProtectedRoute requiredPermission="PAYROLL_MANAGE">
+              <PayrollRunsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/career" element={<CareerProgressionPage />} />
         <Route path="/promotions/:id" element={<PromotionApplicationDetailPage />} />
         <Route

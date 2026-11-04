@@ -34,6 +34,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import PaymentsIcon from '@mui/icons-material/Payments';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -142,6 +143,7 @@ export function DashboardLayout() {
       { label: 'My Profile', to: '/staff/me', icon: <PersonIcon fontSize="small" />, badgeColor: '#10b981' },
       { label: 'My Account', to: '/account/password', icon: <LockIcon fontSize="small" />, badgeColor: '#0284c7' },
       { label: 'Attendance', to: '/attendance', icon: <AccessTimeIcon fontSize="small" />, badgeColor: '#06b6d4' },
+      { label: 'My Payslips', to: '/payslips', icon: <PaymentsIcon fontSize="small" />, badgeColor: '#22c55e' },
       { label: 'Leave Requests', to: '/leave', icon: <BeachAccessIcon fontSize="small" />, badgeColor: '#f59e0b' },
       { label: 'Career Progression', to: '/career', icon: <TrendingUpIcon fontSize="small" />, badgeColor: '#ec4899' },
     ];
@@ -169,11 +171,15 @@ export function DashboardLayout() {
       });
     }
 
+    const adminItems: NavItem[] = [];
+    if (hasPermission('PAYROLL_MANAGE')) {
+      adminItems.push({ label: 'Payroll', to: '/payroll', icon: <PaymentsIcon fontSize="small" />, badgeColor: '#16a34a' });
+    }
     if (hasPermission('AUDIT_VIEW')) {
-      sections.push({
-        label: 'ADMINISTRATION',
-        items: [{ label: 'Audit Log', to: '/audit', icon: <HistoryIcon fontSize="small" />, badgeColor: '#64748b' }],
-      });
+      adminItems.push({ label: 'Audit Log', to: '/audit', icon: <HistoryIcon fontSize="small" />, badgeColor: '#64748b' });
+    }
+    if (adminItems.length > 0) {
+      sections.push({ label: 'ADMINISTRATION', items: adminItems });
     }
 
     if (hasPermission('DEPLOYMENT_TRIGGER')) {
