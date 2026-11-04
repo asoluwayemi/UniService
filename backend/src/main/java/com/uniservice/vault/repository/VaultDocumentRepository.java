@@ -13,4 +13,6 @@ public interface VaultDocumentRepository extends JpaRepository<VaultDocument, Lo
     List<VaultDocument> findByOwnerAndVisibleToOwnerTrueOrderByCreatedAtDesc(User owner);
 
     List<VaultDocument> findByExpiresOnBetweenOrderByExpiresOnAsc(LocalDate from, LocalDate to);
+
+    long countByExpiresOnBetween(LocalDate from, LocalDate to);
 }

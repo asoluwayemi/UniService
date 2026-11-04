@@ -34,6 +34,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import InsightsIcon from '@mui/icons-material/Insights';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import WorkIcon from '@mui/icons-material/Work';
@@ -121,6 +122,9 @@ export function DashboardLayout() {
     if (hasPermission('RECRUITMENT_MANAGE')) {
       hrPortalItems.push({ label: 'Recruitment', to: '/recruitment', icon: <WorkIcon fontSize="small" />, badgeColor: '#a855f7' });
     }
+    if (hasPermission('ANALYTICS_VIEW')) {
+      hrPortalItems.push({ label: 'Analytics', to: '/analytics', icon: <InsightsIcon fontSize="small" />, badgeColor: '#6366f1' });
+    }
     if (hasPermission('VAULT_MANAGE')) {
       hrPortalItems.push({ label: 'Document Vault', to: '/vault', icon: <FolderSpecialIcon fontSize="small" />, badgeColor: '#0ea5e9' });
     }
@@ -185,6 +189,9 @@ export function DashboardLayout() {
     }
 
     const adminItems: NavItem[] = [];
+    if (hasPermission('ANALYTICS_VIEW')) {
+      adminItems.push({ label: 'Analytics', to: '/analytics', icon: <InsightsIcon fontSize="small" />, badgeColor: '#6366f1' });
+    }
     if (hasPermission('PAYROLL_MANAGE')) {
       adminItems.push({ label: 'Payroll', to: '/payroll', icon: <PaymentsIcon fontSize="small" />, badgeColor: '#16a34a' });
     }
