@@ -29,6 +29,7 @@ class DeploymentServiceTest {
 
     @Mock private DeploymentRunRepository runs;
     @Mock private ProcessRunner processRunner;
+    @Mock private com.uniservice.audit.service.AuditService auditService;
 
     // Runs tasks synchronously in the calling thread, so the whole trigger flow is deterministic to test.
     private final Executor syncExecutor = Runnable::run;
@@ -38,7 +39,7 @@ class DeploymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new DeploymentService(runs, processRunner, syncExecutor, "/repo", "deploy.ps1");
+        service = new DeploymentService(runs, auditService, processRunner, syncExecutor, "/repo", "deploy.ps1");
 
         actor = new User();
         actor.setId(1L);

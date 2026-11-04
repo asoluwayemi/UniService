@@ -1,5 +1,6 @@
 package com.uniservice.devops.service;
 
+import com.uniservice.audit.service.AuditService;
 import com.uniservice.auth.entity.User;
 import com.uniservice.devops.dto.DeploymentRunResponse;
 import com.uniservice.devops.entity.DeploymentRun;
@@ -24,6 +25,7 @@ public class DeploymentService {
     private static final Duration TIMEOUT = Duration.ofMinutes(10);
 
     private final DeploymentRunRepository runs;
+    private final AuditService auditService;
     private final ProcessRunner processRunner;
     private final Executor deploymentExecutor;
     private final String repoRoot;
@@ -31,11 +33,13 @@ public class DeploymentService {
 
     public DeploymentService(
             DeploymentRunRepository runs,
+            AuditService auditService,
             ProcessRunner processRunner,
             @Qualifier("deploymentExecutor") Executor deploymentExecutor,
             @Value("${app.devops.repo-root}") String repoRoot,
             @Value("${app.devops.deploy-script}") String deployScript) {
         this.runs = runs;
+        this.auditService = auditService;
         this.processRunner = processRunner;
         this.deploymentExecutor = deploymentExecutor;
         this.repoRoot = repoRoot;
@@ -76,6 +80,7 @@ public class DeploymentService {
                 .build());
 
         Long runId = run.getId();
+        auditService.record(actor.getUsername(), "DEPLOYMENT_" + type.name() + "_TRIGGERED", "DeploymentRun", String.valueOf(runId), null);
         File workingDirectory = new File(repoRoot);
         deploymentExecutor.execute(() -> runAndRecord(runId, command, workingDirectory));
 

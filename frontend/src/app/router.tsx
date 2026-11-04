@@ -21,6 +21,7 @@ import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
 import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
 import { PromotionReviewPage } from '../features/promotion/PromotionReviewPage';
 import { PromotionApplicationDetailPage } from '../features/promotion/PromotionApplicationDetailPage';
+import { AuditLogPage } from '../features/audit/AuditLogPage';
 import { DeveloperPage } from '../features/devops/DeveloperPage';
 
 import { DeanPortalPage } from '../features/leadership/DeanPortalPage';
@@ -56,6 +57,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute requiredPermission="PROMOTION_MANAGE">
               <PromotionReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/audit"
+          element={
+            <ProtectedRoute requiredPermission="AUDIT_VIEW">
+              <AuditLogPage />
             </ProtectedRoute>
           }
         />

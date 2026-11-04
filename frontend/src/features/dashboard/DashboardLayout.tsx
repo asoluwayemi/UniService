@@ -42,6 +42,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import SearchIcon from '@mui/icons-material/Search';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import HistoryIcon from '@mui/icons-material/History';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 
 import { useAuth } from '../../app/AuthContext';
@@ -121,6 +122,9 @@ export function DashboardLayout() {
     if (hasRole('SYSTEM_ADMIN')) {
       hrPortalItems.push({ label: 'Approvals Queue', to: '/organization/approvals', icon: <FactCheckIcon fontSize="small" />, badgeColor: '#ef4444' });
     }
+    if (hasPermission('AUDIT_VIEW')) {
+      hrPortalItems.push({ label: 'Audit Log', to: '/audit', icon: <HistoryIcon fontSize="small" />, badgeColor: '#64748b' });
+    }
     if (hasPermission('DEPLOYMENT_TRIGGER')) {
       hrPortalItems.push({ label: 'Developer Tools', to: '/developer', icon: <RocketLaunchIcon fontSize="small" />, badgeColor: '#6366f1' });
     }
@@ -160,6 +164,13 @@ export function DashboardLayout() {
       sections.push({
         label: 'HR PORTAL',
         items: [{ label: 'Enter HR Portal', to: '/hr', icon: <AdminPanelSettingsIcon fontSize="small" />, badgeColor: '#14b8a6' }],
+      });
+    }
+
+    if (hasPermission('AUDIT_VIEW')) {
+      sections.push({
+        label: 'ADMINISTRATION',
+        items: [{ label: 'Audit Log', to: '/audit', icon: <HistoryIcon fontSize="small" />, badgeColor: '#64748b' }],
       });
     }
 

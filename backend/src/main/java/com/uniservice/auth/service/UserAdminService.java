@@ -1,5 +1,6 @@
 package com.uniservice.auth.service;
 
+import com.uniservice.audit.service.AuditService;
 import com.uniservice.auth.dto.CreateUserRequest;
 import com.uniservice.auth.dto.UserSummaryResponse;
 import com.uniservice.auth.entity.Role;
@@ -28,6 +29,7 @@ public class UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<UserSummaryResponse> listAllUsers() {
@@ -61,6 +63,8 @@ public class UserAdminService {
                 .roles(resolvedRoles)
                 .build();
         User saved = userRepository.save(user);
+        auditService.record(actor.getUsername(), "USER_CREATED", "User", String.valueOf(saved.getId()),
+                "roles=" + saved.getRoles().stream().map(Role::getName).sorted().collect(Collectors.joining(",")));
 
         return new UserSummaryResponse(saved.getId(), saved.getUsername(), saved.getEmail(),
                 saved.getFirstName(), saved.getLastName(), saved.isEnabled(),
@@ -78,6 +82,8 @@ public class UserAdminService {
         }
         target.setEnabled(enabled);
         User saved = userRepository.save(target);
+        auditService.record(actor.getUsername(), enabled ? "USER_ENABLED" : "USER_DISABLED", "User",
+                String.valueOf(saved.getId()), saved.getUsername());
         return new UserSummaryResponse(saved.getId(), saved.getUsername(), saved.getEmail(),
                 saved.getFirstName(), saved.getLastName(), saved.isEnabled(),
                 saved.getRoles().stream().map(Role::getName).collect(Collectors.toCollection(TreeSet::new)));

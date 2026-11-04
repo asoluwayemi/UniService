@@ -30,6 +30,7 @@ class UserAdminServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private RoleRepository roleRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private com.uniservice.audit.service.AuditService auditService;
 
     private UserAdminService service;
 
@@ -39,7 +40,7 @@ class UserAdminServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new UserAdminService(userRepository, roleRepository, passwordEncoder);
+        service = new UserAdminService(userRepository, roleRepository, passwordEncoder, auditService);
 
         systemAdminRole = Role.builder().name("SYSTEM_ADMIN").build();
         systemAdminRole.setId(1L);
