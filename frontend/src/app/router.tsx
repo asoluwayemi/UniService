@@ -21,6 +21,7 @@ import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
 import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
 import { PromotionReviewPage } from '../features/promotion/PromotionReviewPage';
 import { PromotionApplicationDetailPage } from '../features/promotion/PromotionApplicationDetailPage';
+import { AttendancePage } from '../features/attendance/AttendancePage';
 import { AuditLogPage } from '../features/audit/AuditLogPage';
 import { DeveloperPage } from '../features/devops/DeveloperPage';
 
@@ -50,6 +51,7 @@ export function AppRouter() {
         <Route path="/staff/me" element={<MyProfilePage />} />
         <Route path="/academic-portal" element={<AcademicPortalPage />} />
         <Route path="/leave" element={<LeaveRequestsPage />} />
+        <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/career" element={<CareerProgressionPage />} />
         <Route path="/promotions/:id" element={<PromotionApplicationDetailPage />} />
         <Route

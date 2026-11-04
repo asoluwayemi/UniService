@@ -34,6 +34,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SchoolIcon from '@mui/icons-material/School';
@@ -140,6 +141,7 @@ export function DashboardLayout() {
     const selfServiceItems: NavItem[] = [
       { label: 'My Profile', to: '/staff/me', icon: <PersonIcon fontSize="small" />, badgeColor: '#10b981' },
       { label: 'My Account', to: '/account/password', icon: <LockIcon fontSize="small" />, badgeColor: '#0284c7' },
+      { label: 'Attendance', to: '/attendance', icon: <AccessTimeIcon fontSize="small" />, badgeColor: '#06b6d4' },
       { label: 'Leave Requests', to: '/leave', icon: <BeachAccessIcon fontSize="small" />, badgeColor: '#f59e0b' },
       { label: 'Career Progression', to: '/career', icon: <TrendingUpIcon fontSize="small" />, badgeColor: '#ec4899' },
     ];
