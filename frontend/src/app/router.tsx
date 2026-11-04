@@ -21,6 +21,7 @@ import { LeaveRequestsPage } from '../features/leave/LeaveRequestsPage';
 import { CareerProgressionPage } from '../features/promotion/CareerProgressionPage';
 import { PromotionReviewPage } from '../features/promotion/PromotionReviewPage';
 import { PromotionApplicationDetailPage } from '../features/promotion/PromotionApplicationDetailPage';
+import { RecruitmentPage } from '../features/recruitment/RecruitmentPage';
 import { MyPayslipsPage } from '../features/payroll/MyPayslipsPage';
 import { PayrollRunsPage } from '../features/payroll/PayrollRunsPage';
 import { AttendancePage } from '../features/attendance/AttendancePage';
@@ -55,6 +56,14 @@ export function AppRouter() {
         <Route path="/leave" element={<LeaveRequestsPage />} />
         <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/payslips" element={<MyPayslipsPage />} />
+        <Route
+          path="/recruitment"
+          element={
+            <ProtectedRoute requiredPermission="RECRUITMENT_MANAGE">
+              <RecruitmentPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/payroll"
           element={
